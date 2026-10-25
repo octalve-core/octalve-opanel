@@ -1,6 +1,6 @@
 # OPanel independent foundation design — 2026-10-25
 
-Status: proposed architecture, awaiting owner design approval. No application implementation, deployment, migration, money collection or provisioning is represented as complete.
+Status: **customer entry and identity contract confirmed by owner, 25 October 2026**. Other design and engineering details remain proposed until individually accepted. No application implementation, deployment, migration, money collection or provisioning is represented as complete.
 
 ## Intent and authority
 Build Octalve's hPanel-like technical hosting interface in octalve-core/octalve-opanel. Console remains the WHMCS-like authority for customers, service ownership, commercial catalog, invoices, settlement and provisioning. OPanel must never infer technical entitlement from a paid invoice or create hosting accounts.
@@ -29,22 +29,26 @@ docs/: architecture, threat model, acceptance ledger and operator runbooks.
 Independent configuration, dependencies/lockfiles and secrets. OPanel stores only operational/session/audit data; Console remains source of ownership truth.
 Production and review use separate databases, credentials and provider configuration. Review starts with synthetic providers only. Deployment is manual and remains disabled until acceptance. No production migrations.
 
-## Authentication and entitlement contract v1 (PROPOSED, not present in Console)
-1. User selects an active service in Console and navigates to OPanel's fixed launch-start endpoint. A service ID is an identifier, never authority.
+## Authentication and entitlement contract v1 (CUSTOMER ENTRY APPROVED; not implemented in Console)
+**Owner decision — mandatory:** Octalve Console is the **only customer login and account-registration system**. A hosting customer must never create, reset, or enter a separate OPanel password. After signing into Console, the customer chooses an active, verified-provisioned hosting service and selects **Manage hosting / Open OPanel**. A Console-authorized, one-use SSO code starts an **independent OPanel session**; no Console cookie, password, JWT signing key, or hosting control-panel password is reused as the OPanel session credential.
+
+**Distinct identities:** (a) Console customer identity authenticates the human; (b) Console service entitlement authorizes the service; (c) OPanel issues its own short-lived session bound to both; (d) the DirectAdmin/cPanel account is the back-end hosting account being managed, not an independent OPanel customer identity. Provider/account identifiers and credentials are server-only. Do not create a local customer password database or second sign-up experience inside OPanel.
+
+1. Customer is already authenticated in Console, opens an **active and independently confirmed provisioned** service, and chooses **Manage hosting / Open OPanel**. Console and OPanel follow fixed registered launch and redirect endpoints. A service ID is an identifier, never authority.
 2. OPanel creates a short-lived server-stored state and PKCE challenge, binds the transaction to an HttpOnly browser cookie, and redirects to a fixed Console authorization endpoint.
 3. Console authenticates the existing customer and verifies exact service ownership, supported service type, active status and provider-confirmed provisioning. No implicit admin bypass for customer launch.
 4. Console issues an opaque, single-use code bound to subject, service, audience, exact registered redirect URI, PKCE challenge and a maximum 60-second lifetime.
 5. OPanel validates browser-bound state and redeems the code server-to-server using PKCE and its own authenticated client identity. Console atomically consumes codes and rejects replay.
 6. OPanel rotates the session ID and creates a short-lived opaque session in its independent shared store. Cookie: Secure, HttpOnly, SameSite=Lax, Path=/, __Host- prefix. No access/refresh tokens in browser storage.
 7. Every technical API request revalidates service entitlement with Console; no fail-open cache. Wrong ownership returns non-enumerating denial; suspended/expired/revoked services lose access. Console outage returns unavailable and performs no provider request.
-8. Logout deletes the OPanel session. Console revocation is observed on subsequent requests. Absolute and idle expiry are enforced server-side.
+8. Logout deletes the OPanel session; Console's independent customer session need not be logged out. After OPanel session expiry, returning via Console starts a new SSO launch rather than prompting for OPanel credentials. Console revocation is observed on subsequent requests. Absolute and idle expiry are enforced server-side. Every OPanel session must be bound to its exact subject and service; switching services demands a new authorization.
 9. Callback responses use no-store, no-referrer, no third-party assets; code/state/query values are excluded from logs and immediately removed by redirect.
 10. CSRF token and exact Origin validation protect state-changing requests; no wildcard credentialed CORS.
 
 Proposed server-to-server namespace: /api/integrations/opanel/v1/. Separate launch redemption and entitlement endpoints, authenticated with dedicated rotated service credentials (never Console's JWT signing key). Responses bind subject_id, service_id, status, provision_verified_at, allowed capabilities, entitlement revision and an opaque operational binding reference. Credentials/provider account identifiers are never returned to the browser.
 An authenticated Console operational binding resolver must map the entitlement binding to provider/account identity for OPanel server use only. OPanel resolves the dedicated least-privilege provider credential through its own configured secret store. No browser-supplied provider endpoint, account name or credential reference is trusted.
 
-Existing overview is reusable through a strict legacy client for redacted metadata and snapshots only. It cannot authorize provider calls. The new Console endpoints require a separately scoped Console integration change; foundation tests use an explicit synthetic issuer and contract fixture. Until the issuer is implemented and accepted, real Console launch must return an honest integration-unavailable state.
+Existing overview is reusable through a strict legacy client for redacted metadata and snapshots only. It cannot authorize provider calls. The Console PR #14 `/client/services/:id/opanel` view is **a Console-hosted read-only prototype** and must not be labeled a working OPanel sign-in or technical control panel. Until the independently reviewed issuer and launch/callback are implemented, the Console action should say **View hosting status**, not **Open OPanel**, and should not redirect to a nonexistent panel. When SSO is qualified, the real **Manage hosting / Open OPanel** action will use the independent launch endpoint. The new Console endpoints require a separately scoped Console integration change; foundation tests use an explicit synthetic issuer and contract fixture. Until the issuer is implemented and accepted, real Console launch must return an honest integration-unavailable state.
 
 ## Provider-neutral technical architecture
 Typed adapter contract: capabilities(), get_overview(binding), get_usage(binding), then separately accepted module commands.
@@ -72,7 +76,8 @@ Technical modules: websites/domains/subdomains inventory; then DNS and files; da
 Registrar authority, DNS authority and hosting-domain attachment remain distinct. DNS edits require authoritative-zone control; certificate issuance and restore operations require explicit scopes and audit.
 
 ## Tests and acceptance
-- Wrong owner/service/audience; inactive account; pending/suspended/terminated service; missing provisioning verification; revoked entitlement.
+- Only one customer registration/login in Console; no independent OPanel password UI, customer password exchange or browser-visible hosting credentials. Successful Console→OPanel launch creates only an OPanel-owned, service-scoped session.
+- Wrong owner/service/audience; inactive account; pending/suspended/terminated service; missing provisioning verification; revoked entitlement; cross-service session reuse.
 - Expired/replayed code, state/PKCE mismatch, callback redirect tampering, session fixation/expiry/logout, CSRF and request-origin violations.
 - Console outages/timeouts/invalid contracts prevent all provider calls.
 - Cross-account provider binding attempts; unsupported capability; forbidden endpoint/redirect; malformed/oversized responses; credential redaction.
