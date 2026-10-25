@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { consoleDestination, currentSession, type HostingUsage, type PanelSession } from "@/lib/session";
 import { findModule, moduleGroups, modules } from "@/lib/modules";
+import { PlannedModuleDetail } from "@/components/PlannedModuleDetail";
 
 type ViewState = "loading" | "ready" | "locked" | "error";
 const ACTIVE = new Set(["overview", "statistics", "settings"]);
@@ -65,11 +66,7 @@ function ReadOnlyModule({slug, session}: {slug:string; session:PanelSession}) {
     <div className="property"><span>Session scope</span><strong>One verified hosting service</strong></div>
     <div className="property"><span>Technical operations</span><strong>Not enabled</strong></div>
     <p>No separate OPanel password, billing record, or provider administrator account is stored in this interface.</p></div>;
-  return <div className="detail-panel"><span className="preview-tag">COMING LATER</span>
-    <h2>{module.name}</h2><p>{module.description}</p>
-    <div className="empty-slate"><span className="lock-mark">◇</span><strong>Provider management is not enabled.</strong>
-      <p>We will enable this module only after its account-scoped API adapter and full security checks pass. No settings can be changed from this page.</p></div>
-    <Link className="back-link" href="/">Return to overview</Link></div>;
+  return <PlannedModuleDetail slug={slug} />;
 }
 
 export function Workspace({ selected }: { selected: string }) {
