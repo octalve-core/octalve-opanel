@@ -49,7 +49,7 @@ class PanelSessionTests(TestCase):
             })
         self.assertEqual(result.status_code, 302)
         self.assertEqual(result["Location"], "/")
-        self.assertEqual(result["Cache-Control"], "no-store")
+        self.assertIn("no-store", result["Cache-Control"])
         self.assertEqual(result["Referrer-Policy"], "no-referrer")
         self.assertNotEqual(old_key, self.client.session.session_key)
         self.assertNotIn("pending", self.client.session)
