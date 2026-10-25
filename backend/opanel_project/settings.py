@@ -81,3 +81,7 @@ CONSOLE_API_BASE = os.getenv("CONSOLE_API_BASE", "")
 OPANEL_CALLBACK_URL = os.getenv("OPANEL_CALLBACK_URL", "")
 OPANEL_CLIENT_ID = os.getenv("OPANEL_CLIENT_ID", "octalve-opanel")
 OPANEL_CLIENT_SECRET = os.getenv("OPANEL_CLIENT_SECRET", "")
+
+# Provider adapters are backend-only and default off until approved egress, token
+# storage and an account-scoped reconciliation worker are deployed.
+OPANEL_VENDOR_READBACK_ENABLED = os.getenv("OPANEL_VENDOR_READBACK_ENABLED", "").lower() in ("1", "true")
