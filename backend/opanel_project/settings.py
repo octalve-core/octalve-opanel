@@ -51,6 +51,22 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = "Lax"
+# Explicit first-party public origin for trusted external Next.js rewrites.
+# Never take this from request headers. The reverse proxy MUST restrict who can
+# supply X-Forwarded-Proto if OPANEL_TRUST_PROXY is opted into.
+OPANEL_PUBLIC_ORIGIN = os.getenv("OPANEL_PUBLIC_ORIGIN", "")
+if OPANEL_PUBLIC_ORIGIN:
+    from urllib.parse import urlparse
+    parsed_public = urlparse(OPANEL_PUBLIC_ORIGIN)
+    if (parsed_public.scheme != "https" or not parsed_public.hostname
+            or parsed_public.username or parsed_public.password
+            or parsed_public.query or parsed_public.fragment
+            or parsed_public.path not in ("", "/")):
+        raise ImproperlyConfigured("OPANEL_PUBLIC_ORIGIN must be one HTTPS origin.")
+CSRF_TRUSTED_ORIGINS = [OPANEL_PUBLIC_ORIGIN.rstrip("/")] if OPANEL_PUBLIC_ORIGIN else []
+if os.getenv("OPANEL_TRUST_PROXY", "").lower() in ("1", "true"):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_HSTS_SECONDS = 3600 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False
