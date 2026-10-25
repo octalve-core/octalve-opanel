@@ -91,7 +91,10 @@ class PanelSessionTests(TestCase):
                 pending = self.initial_state()
                 fake = self.fake_console("entitlement/", {"subject_id": 41, "service_id": 13})
                 fake[field] = value
-                with patch("bridge.views.console_post", return_value=fake):
+                good = self.fake_console("entitlement/", {"subject_id": 41, "service_id": 13})
+                def simulated_console(endpoint, payload):
+                    return fake if endpoint == "exchange/" else good
+                with patch("bridge.views.console_post", side_effect=simulated_console):
                     result = self.client.get("/auth/callback/", {
                         "code": "c" * 64, "state": pending["state"],
                     })
