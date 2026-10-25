@@ -26,6 +26,14 @@ def configured():
     api = settings.CONSOLE_API_BASE
     web = settings.CONSOLE_WEB_ORIGIN
     callback = settings.OPANEL_CALLBACK_URL
+    public = getattr(settings, "OPANEL_PUBLIC_ORIGIN", "")
+    # The browser-facing panel origin MUST be explicitly registered when
+    # deployed behind the independent Next.js reverse proxy.
+    if (not settings.DEBUG and not public) or (public and (
+        not _valid_url(public) or urlparse(public).path not in ("", "/")
+        or urlparse(callback).netloc != urlparse(public).netloc
+        or urlparse(callback).scheme != urlparse(public).scheme)):
+        return False
     return (
         all(_valid_url(x) for x in (api, web, callback))
         and api.endswith("/api")
