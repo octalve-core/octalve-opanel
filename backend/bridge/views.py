@@ -184,7 +184,13 @@ def session_status(request):
     identity, status = authorize_session(request)
     if not identity:
         return clean(JsonResponse({"authenticated": False}, status=status))
-    # Django still enforces same-origin/CSRF checks for POST logout. This\n    # safe one-time CSRF token is returned to the first-party Next.js UI,\n    # never to another origin; the cookie itself remains HttpOnly.\n    return clean(JsonResponse({"authenticated": True, **identity, "capabilities": ["overview"],\n                               "csrf_token": get_token(request)}))
+    # CSRF masked token is provided to the same-origin frontend only.
+    # The CSRF cookie remains HttpOnly and Django validates POST logout.
+    return clean(JsonResponse({
+        "authenticated": True, **identity,
+        "capabilities": ["overview"],
+        "csrf_token": get_token(request),
+    }))
 
 
 @never_cache
