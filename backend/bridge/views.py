@@ -2,6 +2,8 @@
 import base64
 import hashlib
 import hmac
+import math
+import re
 import secrets
 import time
 import uuid
@@ -9,10 +11,14 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import redirect
-from django.utils.html import escape
+from django.middleware.csrf import get_token
+from .dashboard import dashboard_html, normalize_overview
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from .client import ConsoleUnavailable, configured, console_post
+
+OPAQUE_CODE = re.compile(r"^[A-Za-z0-9_-]{48,128}$")
+BROWSER_STATE = re.compile(r"^[A-Za-z0-9_-]{22,128}$")
 
 SESSION_IDLE = 900
 SESSION_ABSOLUTE = 7200
@@ -23,6 +29,7 @@ def clean(response):
     response["Cache-Control"] = "no-store"
     response["Referrer-Policy"] = "no-referrer"
     response["X-Content-Type-Options"] = "nosniff"
+    response["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
     return response
 
 
@@ -87,9 +94,14 @@ def callback(request):
     state = request.GET.get("state")
     if not isinstance(pending, dict) or not isinstance(code, str) or not isinstance(state, str):
         return denied(request)
-    if (not hmac.compare_digest(state, pending.get("state", ""))
-            or len(code) < 48
-            or time.time() - pending.get("created_at", 0) > LAUNCH_WINDOW):
+    if (not OPAQUE_CODE.fullmatch(code) or not BROWSER_STATE.fullmatch(state)
+            or not isinstance(pending.get("state"), str)
+            or not BROWSER_STATE.fullmatch(pending["state"])
+            or not hmac.compare_digest(state, pending["state"])
+            or not isinstance(pending.get("created_at"), (int, float))
+            or not math.isfinite(pending["created_at"])
+            or time.time() - pending["created_at"] > LAUNCH_WINDOW
+            or pending["created_at"] > time.time() + 10):
         return denied(request)
     try:
         grant = console_post("exchange/", {
@@ -144,7 +156,9 @@ def authorize_session(request):
     except (KeyError, ValueError, TypeError):
         request.session.flush()
         return None, 401
-    if (now - issued_at >= SESSION_ABSOLUTE or now - last_activity >= SESSION_IDLE
+    if (not math.isfinite(issued_at) or not math.isfinite(last_activity)
+            or subject_id < 1 or service_id < 1
+            or now - issued_at >= SESSION_ABSOLUTE or now - last_activity >= SESSION_IDLE
             or issued_at > now + 10 or last_activity > now + 10):
         request.session.flush()
         return None, 401
@@ -159,7 +173,8 @@ def authorize_session(request):
     identity["last_activity"] = now
     request.session["opanel_identity"] = identity
     request.session.set_expiry(min(SESSION_IDLE, max(1, int(SESSION_ABSOLUTE - (now - issued_at)))))
-    return {"subject_id": subject_id, "service_id": service_id}, 200
+    return {"subject_id": subject_id, "service_id": service_id,
+            "overview": normalize_overview(response.get("overview"), service_id)}, 200
 
 
 @never_cache
@@ -182,21 +197,8 @@ def home(request):
             "OPanel access is not available. Open an active hosting service in Octalve Console.",
             status=status,
         ))
-    service_id = escape(str(identity["service_id"]))
-    body = (
-        "<!doctype html><html lang='en'><head><meta charset='utf-8'>"
-        "<meta name='viewport' content='width=device-width, initial-scale=1'>"
-        "<meta name='referrer' content='no-referrer'><title>Octalve OPanel</title>"
-        "</head><body style='font:16px system-ui;max-width:800px;margin:4rem auto;padding:1rem'>"
-        "<h1>Octalve OPanel</h1>"
-        "<p>Signed into your service securely through Octalve Console.</p>"
-        f"<p>Hosting service ID: {service_id}</p>"
-        "<p>Technical management operations remain disabled until verified adapters are approved.</p>"
-        "<form method='post' action='/auth/logout/'>"
-        f"<input type='hidden' name='csrfmiddlewaretoken' value='{escape(str(__import__('django.middleware.csrf', fromlist=['get_token']).get_token(request)))}'>"
-        "<button type='submit'>Sign out of OPanel</button></form></body></html>"
-    )
-    return clean(HttpResponse(body))
+    html = dashboard_html(identity, get_token(request))
+    return clean(HttpResponse(html))
 
 
 @csrf_protect
