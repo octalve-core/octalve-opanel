@@ -106,6 +106,17 @@ def callback(request):
         return denied(request)
     if subject_id < 1 or not valid_binding(grant, subject_id, service_id):
         return denied(request)
+    # A code-exchange response alone does not grant technical access: read the
+    # authoritative *current* entitlement separately before creating a session.
+    # This also prevents mismatched subject/service/binding substitutions.
+    try:
+        current = console_post("entitlement/", {
+            "subject_id": subject_id, "service_id": service_id,
+        })
+    except ConsoleUnavailable:
+        return denied(request, 503)
+    if not valid_binding(current, subject_id, service_id, str(uuid.UUID(grant["binding_ref"]))):
+        return denied(request)
     now = time.time()
     request.session.flush()  # Discards state/verifier and old session identifier.
     request.session["opanel_identity"] = {
