@@ -1,6 +1,6 @@
 # OPanel independent foundation design — 2026-10-25
 
-Status: **customer entry and identity contract confirmed by owner, 25 October 2026**. Other design and engineering details remain proposed until individually accepted. No application implementation, deployment, migration, money collection or provisioning is represented as complete.
+Status: **customer entry and identity contract confirmed by owner, 25 October 2026**. The first Django SSO/session foundation is implemented in this development PR with CI tests, but integration credentials, live browser acceptance, provider operations and deployment have NOT been accepted. Next.js UI and modules remain future work.
 
 ## Intent and authority
 Build Octalve's hPanel-like technical hosting interface in octalve-core/octalve-opanel. Console remains the WHMCS-like authority for customers, service ownership, commercial catalog, invoices, settlement and provisioning. OPanel must never infer technical entitlement from a paid invoice or create hosting accounts.
@@ -91,3 +91,11 @@ Registrar authority, DNS authority and hosting-domain attachment remain distinct
 Next.js/Django and the visual defaults are recommended engineering choices. Owner approval of this design precedes application implementation under the architecture skill.
 Builder may choose compatible pinned versions after registry/runtime verification, session-store implementation and internal component boundaries. Production domain names, dedicated integration credentials and scoped provider secrets are configured later without placing secrets in chat or GitHub.
 Foundation acceptance is not full hosting-product acceptance. Keep a concrete remaining-work ledger and exact commit/PR links.
+
+## Implementation ledger (same development PR)
+- backend/opanel_project is a standalone Django project (no Console account/password database).
+- backend/bridge provides GET /auth/start/, GET /auth/callback/, GET /api/session/, POST /auth/logout/ and a minimal authenticated home screen. Browser-bound state and PKCE verifier live in OPanel's database session; Console authorization code is redeemed server-to-server with a dedicated confidential client credential.
+- Fresh Console entitlement validation happens on every authenticated page/API request and must return the exact subject, service and opaque binding. Any unavailable or revoked binding yields no access.
+- Session cookie uses the host-only __Host- name, HttpOnly, Secure, SameSite=Lax in Production. Login rotates the session key; 15-minute idle/2-hour absolute expiry. CSRF protects logout. Callback and session responses suppress storage and referrers.
+- Provider adapter methods and account mutations remain unimplemented. No actual hosting account was created or checked.
+- CI installs pinned Django and runs bridge security tests; additional browser acceptance and a genuine confirmed provisioning binding remain pre-release requirements.
