@@ -11,7 +11,8 @@ BINDING = "e60d4718-34b4-4e46-b171-04515159a7b1"
 
 def fake_response(data, status=200):
     result = Mock(status_code=status, headers={})
-    result.raw = io.BytesIO(data.encode("utf-8"))
+    result.raw = Mock()
+    result.raw.read.return_value = data.encode("utf-8")
     return result
 
 
