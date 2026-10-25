@@ -164,6 +164,29 @@ class PanelSessionTests(TestCase):
                 self.assertEqual(result.status_code, 401)
                 outgoing.assert_not_called()
 
+    @override_settings(CSRF_TRUSTED_ORIGINS=["https://panel.example.test"])
+    def test_nextjs_csrf_header_protects_successful_same_origin_logout(self):
+        browser = Client(enforce_csrf_checks=True)
+        launched = browser.get("/auth/start/", {"service_id": 13})
+        self.assertEqual(launched.status_code, 302)
+        pending = browser.session["pending"]
+        with patch("bridge.views.console_post", side_effect=self.fake_console):
+            linked = browser.get("/auth/callback/", {
+                "code": "c" * 64, "state": pending["state"],
+            })
+        self.assertEqual(linked.status_code, 302)
+        with patch("bridge.views.console_post", side_effect=self.fake_console):
+            status = browser.get("/api/session/", secure=True)
+        self.assertEqual(status.status_code, 200)
+        csrf = status.json()["csrf_token"]
+        self.assertEqual(browser.post("/auth/logout/", secure=True).status_code, 403)
+        self.assertIn("opanel_identity", browser.session)
+        done = browser.post("/auth/logout/", secure=True,
+                            HTTP_X_CSRFTOKEN=csrf,
+                            HTTP_ORIGIN="https://panel.example.test")
+        self.assertEqual(done.status_code, 302)
+        self.assertNotIn("opanel_identity", browser.session)
+
     def test_logout_requires_post_and_csrf(self):
         self.login()
         self.assertEqual(self.client.get("/auth/logout/").status_code, 405)
