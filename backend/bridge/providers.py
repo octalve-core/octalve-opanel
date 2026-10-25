@@ -57,16 +57,16 @@ def _validate(target):
         raise ProviderRejected("No audited adapter for this provider.")
     allowed = {s.strip().lower().rstrip(".") for s in
                os.getenv("OPANEL_PROVIDER_ALLOWED_HOSTS", "").split(",") if s.strip()}
-    parsed = urlsplit(target.https_origin)
-    host = (parsed.hostname or "").lower().rstrip(".")
     try:
+        parsed = urlsplit(target.https_origin)
+        host = (parsed.hostname or "").lower().rstrip(".")
         port = parsed.port
+    except ValueError:
+        raise ProviderRejected("Provider endpoint URL or port is invalid.") from None
+    try:
         ipaddress.ip_address(host)
-    except ValueError as exc:
-        if "does not appear to be" not in str(exc):
-            # Invalid port or malformed URL are never accepted.
-            if "Port could not" in str(exc) or "out of range" in str(exc):
-                raise ProviderRejected("Invalid provider port.") from None
+    except ValueError:
+        pass
     else:
         raise ProviderRejected("IP literal provider endpoints are forbidden.")
     if host == "localhost" or host.endswith((".localhost", ".local", ".internal")):
