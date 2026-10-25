@@ -15,13 +15,16 @@ function backendOrigin(): string | null {
 const backend = backendOrigin();
 const config: NextConfig = {
   poweredByHeader: false,
+  trailingSlash: true,
   async rewrites() {
     if (!backend) return [];
     // Browser sees ONE OPanel origin. The independent Django backend owns
     // HttpOnly session cookies, CSRF, callback and confidential Console calls.
     return [
       { source: "/api/session/", destination: backend + "/api/session/" },
-      { source: "/auth/:path*", destination: backend + "/auth/:path*" },
+      { source: "/auth/start/", destination: backend + "/auth/start/" },
+      { source: "/auth/callback/", destination: backend + "/auth/callback/" },
+      { source: "/auth/logout/", destination: backend + "/auth/logout/" },
       { source: "/health/", destination: backend + "/health/" },
     ];
   },
