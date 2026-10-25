@@ -11,6 +11,7 @@ SECRET = "fixture-console-client-secret-0123456789abcdef"
 
 @override_settings(
     CONSOLE_WEB_ORIGIN=WEB, CONSOLE_API_BASE=API, OPANEL_CALLBACK_URL=CALLBACK,
+    OPANEL_PUBLIC_ORIGIN="https://panel.example.test",
     OPANEL_CLIENT_ID="octalve-opanel", OPANEL_CLIENT_SECRET=SECRET,
 )
 class PanelSessionTests(TestCase):
