@@ -34,11 +34,26 @@ class PanelSessionTests(TestCase):
             self.assertEqual(payload, {"subject_id": 41, "service_id": 13})
         else:
             self.fail("OPanel called an unapproved Console endpoint")
-        return {
+        result = {
             "subject_id": 41, "service_id": 13,
             "binding_ref": "e60d4718-34b4-4e46-b171-04515159a7b1",
             "capabilities": ["overview"],
         }
+        if endpoint == "entitlement/":
+            result["overview"] = {
+                "service_id": 13,
+                "label": "Verified Hosting Starter",
+                "domain": "project.example.test",
+                "status": "active",
+                "next_due_date": "2026-12-01T10:00:00+00:00",
+                "usage_status": "recorded",
+                "usage": {
+                    "disk_used_mb": 128, "disk_limit_mb": 1024,
+                    "bandwidth_used_mb": 512, "bandwidth_limit_mb": 4096,
+                    "recorded_at": "2026-10-25T16:00:00+00:00",
+                },
+            }
+        return result
 
     def login(self):
         pending = self.initial_state()
@@ -158,3 +173,95 @@ class PanelSessionTests(TestCase):
         cookie_names = list(self.client.cookies)
         self.assertTrue(all("octalve_console" not in k for k in cookie_names))
         self.assertTrue(all("password" not in str(v).lower() for v in self.client.cookies.values()))
+
+    def test_independent_dashboard_renders_verified_snapshot_and_locked_tools(self):
+        self.login()
+        with patch("bridge.views.console_post", side_effect=self.fake_console) as verify:
+            response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        page = response.content.decode("utf-8")
+        self.assertIn("Verified Hosting Starter", page)
+        self.assertIn("project.example.test", page)
+        self.assertIn("1,024 MB", page)
+        self.assertIn("Next billing date", page)
+        self.assertIn("Coming later", page)
+        self.assertIn("No operation can change your server here.", page)
+        self.assertIn("grid-template-columns:1fr", page)
+        self.assertIn("Content-Security-Policy", response.headers)
+        self.assertIn("form-action 'self'", response.headers["Content-Security-Policy"])
+        self.assertNotIn("provider_identifier", page)
+        self.assertEqual(verify.call_count, 1)
+
+    def test_html_escaping_of_provider_visible_labels_and_domains(self):
+        self.login()
+        def malicious(endpoint, payload):
+            res = self.fake_console(endpoint, payload)
+            overview = res["overview"]
+            overview["label"] = '<svg onload="alert(1)">Client</svg>'
+            overview["domain"] = '<img src=x onerror="alert(1)">'
+            return res
+        with patch("bridge.views.console_post", side_effect=malicious):
+            resp = self.client.get("/")
+        self.assertEqual(resp.status_code, 200)
+        page = resp.content.decode()
+        self.assertNotIn('<svg onload=', page)
+        self.assertNotIn('<img src=x onerror=', page)
+        self.assertIn('&lt;svg onload=', page)
+        self.assertIn('&lt;img src=x onerror=', page)
+
+    def test_wrong_service_overview_is_never_rendered(self):
+        self.login()
+        def wrong_service(endpoint, payload):
+            res = self.fake_console(endpoint, payload)
+            res["overview"]["service_id"] = 88
+            res["overview"]["label"] = "Other customer secret domain"
+            return res
+        with patch("bridge.views.console_post", side_effect=wrong_service):
+            response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("Other customer secret domain", response.content.decode())
+        self.assertIn("Domain information unavailable", response.content.decode())
+
+    def test_capability_overstatement_aborts_entitlement(self):
+        self.login()
+        def inflated(endpoint, payload):
+            res = self.fake_console(endpoint, payload)
+            res["capabilities"] = ["overview", "files", "dns"]
+            return res
+        with patch("bridge.views.console_post", side_effect=inflated):
+            response = self.client.get("/")
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn("opanel_identity", self.client.session)
+
+    def test_callback_rejects_oversized_or_invalid_codes_without_exchanging(self):
+        from bridge.client import ConsoleUnavailable
+        for supplied in ("z" * 20000, "x" * 48 + "/", "a" * 10):
+            with self.subTest(supplied=supplied[:10]):
+                pending = self.initial_state()
+                with patch("bridge.views.console_post") as external:
+                    result = self.client.get("/auth/callback/", {
+                        "code": supplied, "state": pending["state"],
+                    })
+                self.assertEqual(result.status_code, 403)
+                external.assert_not_called()
+
+    def test_malformed_session_times_denied_without_network(self):
+        self.login()
+        session = self.client.session
+        identity = session["opanel_identity"]
+        identity["issued_at"] = float("nan")
+        session["opanel_identity"] = identity
+        session.save()
+        with patch("bridge.views.console_post") as external:
+            response = self.client.get("/api/session/")
+        self.assertEqual(response.status_code, 401)
+        external.assert_not_called()
+
+    def test_degraded_console_denies_dashboard_rendering(self):
+        self.login()
+        from bridge.client import ConsoleUnavailable
+        with patch("bridge.views.console_post", side_effect=ConsoleUnavailable()):
+            response = self.client.get("/")
+        self.assertEqual(response.status_code, 503)
+        self.assertNotIn("Verified Hosting Starter", response.content.decode())
+
