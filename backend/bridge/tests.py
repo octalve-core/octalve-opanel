@@ -172,6 +172,14 @@ class PanelSessionTests(TestCase):
         csrf_client = Client(enforce_csrf_checks=True)
         self.assertEqual(csrf_client.post("/auth/logout/").status_code, 403)
 
+    @override_settings(DEBUG=False, OPANEL_PUBLIC_ORIGIN="")
+    def test_production_requires_explicit_public_panel_origin(self):
+        self.assertEqual(self.client.get("/auth/start/?service_id=13").status_code, 503)
+
+    @override_settings(OPANEL_PUBLIC_ORIGIN="https://different-panel.example.test")
+    def test_public_panel_callback_origin_must_match_registered_callback(self):
+        self.assertEqual(self.client.get("/auth/start/?service_id=13").status_code, 503)
+
     def test_start_rejects_invalid_service_and_disabled_integration(self):
         self.assertEqual(self.client.get("/auth/start/?service_id=abc").status_code, 400)
         with override_settings(OPANEL_CLIENT_SECRET=""):
