@@ -7,6 +7,7 @@ not create, suspend, modify, delete, or authenticate the customer's account.
 No provider credential is written to sessions, responses, logs or Django DB.
 """
 import base64
+import ipaddress
 import os
 import re
 from dataclasses import dataclass, field
@@ -58,7 +59,18 @@ def _validate(target):
                os.getenv("OPANEL_PROVIDER_ALLOWED_HOSTS", "").split(",") if s.strip()}
     parsed = urlsplit(target.https_origin)
     host = (parsed.hostname or "").lower().rstrip(".")
-    port = parsed.port
+    try:
+        port = parsed.port
+        ipaddress.ip_address(host)
+    except ValueError as exc:
+        if "does not appear to be" not in str(exc):
+            # Invalid port or malformed URL are never accepted.
+            if "Port could not" in str(exc) or "out of range" in str(exc):
+                raise ProviderRejected("Invalid provider port.") from None
+    else:
+        raise ProviderRejected("IP literal provider endpoints are forbidden.")
+    if host == "localhost" or host.endswith((".localhost", ".local", ".internal")):
+        raise ProviderRejected("Internal/local provider hostname is forbidden.")
     if (
         parsed.scheme != "https" or not host or host not in allowed
         or parsed.username or parsed.password or parsed.query or parsed.fragment
