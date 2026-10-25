@@ -22,7 +22,7 @@ Integration references: `octalve-core/octalve-console` PR #13 and PR #14. [Detai
 
 ## Developer execution (no real provider or payment)
 
-The independent backend is under backend/. With Python 3.12 and an isolated environment, install backend/requirements.txt, set DEBUG=true and run python backend/manage.py test bridge (working directory backend). Initial startup also requires the standard Django session migrations.
+The independent backend is under backend/. With Python 3.12 and an isolated environment, install the pinned requirements with python -m pip install -r backend/requirements.txt. Then, from the backend/ directory, set DEBUG=true and run python manage.py test bridge. Initial startup also requires the standard Django session migrations.
 
 Production requires DJANGO_SECRET_KEY, DATABASE_URL, ALLOWED_HOSTS, CONSOLE_WEB_ORIGIN, CONSOLE_API_BASE (ends in /api), OPANEL_CALLBACK_URL (fixed HTTPS /auth/callback/), OPANEL_CLIENT_ID, and OPANEL_CLIENT_SECRET, configured in the deployment secret store. The secret must match Console's client secret, must not be committed and must not be reused as a provider token. Console separately requires OPANEL_ISSUER_ENABLED=true once genuinely qualified. All four URLs must be verified before enabling live launch.
 
