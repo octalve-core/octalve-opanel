@@ -80,6 +80,15 @@ class PanelSessionTests(TestCase):
         self.assertNotIn("provider_identifier", status.content.decode())
         self.assertEqual(console.call_count, 1)
 
+    def test_session_includes_first_party_csrf_token_for_nextjs_logout(self):
+        self.login()
+        with patch("bridge.views.console_post", side_effect=self.fake_console):
+            res = self.client.get("/api/session/")
+        self.assertEqual(res.status_code, 200)
+        self.assertIsInstance(res.json().get("csrf_token"), str)
+        self.assertGreater(len(res.json()["csrf_token"]), 30)
+        self.assertIn("csrftoken", self.client.cookies)
+
     def test_console_outage_blocks_session_view(self):
         self.login()
         from bridge.client import ConsoleUnavailable
