@@ -23,6 +23,9 @@ const config: NextConfig = {
     return [
       { source: "/api/csrf/", destination: backend + "/api/csrf/" },
       { source: "/api/session/", destination: backend + "/api/session/" },
+      { source: "/auth/technical-login/", destination: backend + "/auth/technical-login/" },
+      { source: "/api/technical-access/", destination: backend + "/api/technical-access/" },
+      { source: "/api/technical-access/enroll/", destination: backend + "/api/technical-access/enroll/" },
       { source: "/auth/start/", destination: backend + "/auth/start/" },
       { source: "/auth/callback/", destination: backend + "/auth/callback/" },
       { source: "/auth/logout/", destination: backend + "/auth/logout/" },
