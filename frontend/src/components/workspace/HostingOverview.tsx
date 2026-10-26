@@ -32,7 +32,7 @@ export function HostingOverview({ session }: { session: PanelSession }) {
         </span><span className="module-state">Planned</span>
       </Link>
     )}</div>
-    <div className="info-box"><strong>Management operations are disabled.</strong>
-      <p>DNS updates, files, websites, databases, mail, SSL and backups will become available only after each provider operation is independently verified, account-scoped and approved. This workspace does not provision or change hosting.</p></div>
+    <div className="info-box"><strong>Hosting publication and provider changes remain protected.</strong>
+      <p>Manual ZIP upload inspection is available in Websites and File Manager when enabled for Review. Publishing, DNS updates, databases, mail, SSL and backups require account-scoped provider approval. This workspace does not claim your public website is live.</p></div>
   </>;
 }
