@@ -115,7 +115,7 @@ def inspect_static_zip(payload):
         if isinstance(exc, UploadRefused):
             raise
         raise UploadRefused("Corrupt or unsupported ZIP file.") from None
-    if not files or "index.html" not in seen:
+    if not files or "index.html" not in {name for name,_,_ in files}:
         raise UploadRefused("Static website archive must have index.html at its root.")
     files.sort()
     return UploadInspection(
