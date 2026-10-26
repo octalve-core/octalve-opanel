@@ -9,6 +9,7 @@ For now we support only the FIRST publication into an absent public_html.
 Future site replacements require durable rollback/atomic release pointers.
 """
 from dataclasses import dataclass
+from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
 import os
@@ -87,12 +88,14 @@ def publish_new_site(archive_bytes, *, account_root, service_id,
                     file_fd = os.open(segments[-1], flags, 0o600, dir_fd=base_fd)
                     try:
                         count = 0
+                        digest = sha256()
                         with z.open(name) as source:
                             while True:
                                 chunk = source.read(65536)
                                 if not chunk:
                                     break
                                 count += len(chunk)
+                                digest.update(chunk)
                                 if count > size:
                                     raise LocalPublishRejected("Static asset changed after validation.")
                                 view = memoryview(chunk)
@@ -101,8 +104,8 @@ def publish_new_site(archive_bytes, *, account_root, service_id,
                                     if written <= 0:
                                         raise LocalPublishRejected("Static asset write could not complete.")
                                     view = view[written:]
-                        if count != size:
-                            raise LocalPublishRejected("Static asset length mismatch.")
+                        if count != size or digest.hexdigest() != expected_digest:
+                            raise LocalPublishRejected("Static asset changed after validation.")
                         os.fsync(file_fd)
                     finally:
                         os.close(file_fd)
