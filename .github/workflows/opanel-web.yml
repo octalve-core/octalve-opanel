@@ -1,0 +1,33 @@
+name: OPanel independent Next.js checks
+on:
+  pull_request:
+    paths:
+      - "frontend/**"
+      - "scripts/check_ui_modularity.py"
+      - ".github/workflows/opanel-web.yml"
+  push:
+    branches:
+      - main
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+      - run: corepack enable && corepack prepare pnpm@10.19.0 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: python ../scripts/check_ui_modularity.py
+      - run: python -m venv ../.venv && ../.venv/bin/pip install -r ../backend/requirements.txt
+      - run: OPANEL_LOCAL_PRACTICE=true pnpm exec next build
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e

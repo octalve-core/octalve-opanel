@@ -1,0 +1,16 @@
+/* Static hosting upload: intentionally isolated from the general panel layout. */
+.website-upload{display:grid;gap:20px;min-width:0;max-width:100%}
+.website-upload>*{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.upload-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:24px;display:grid;gap:16px;min-width:0}
+.upload-card input[type=file]{width:100%;max-width:100%;min-width:0;display:block;border:1px dashed #afc5e4;border-radius:10px;padding:14px;background:#f5f9ff;font-size:13px;color:#334155}
+.upload-card code,.website-upload code{overflow-wrap:anywhere;white-space:normal}
+.upload-card label{font-size:14px}
+.upload-card .quiet,.website-upload .quiet{font-size:12px;color:#68798e}
+.upload-actions{display:flex;gap:12px;flex-wrap:wrap;min-width:0}
+.upload-actions button{min-width:0;border:0;border-radius:10px;padding:12px 16px;color:white;background:#0064e0;font-weight:700;font-size:13px}
+.upload-actions button:disabled{color:#6b7890;background:#ecf0f6;cursor:not-allowed}
+.upload-error{color:#aa1424;font-size:13px;overflow-wrap:anywhere}
+.upload-report{background:#f7faff;border:1px solid #cadef5;border-radius:12px;padding:16px;min-width:0}
+.upload-report h3{font-size:16px}.upload-report ul{list-style:none;padding:0;margin:12px 0;display:grid;gap:5px;max-height:300px;overflow:auto}
+.upload-report li{font-size:12px;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding:8px 0;overflow-wrap:anywhere;min-width:0}
+@media(max-width:680px){.upload-card{padding:16px}.upload-actions{flex-direction:column}.upload-actions button{width:100%;white-space:normal}}

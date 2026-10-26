@@ -1,0 +1,11 @@
+/* Independent integration marketplace visuals. */
+.integration-hub{display:grid;gap:20px}.integration-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.integration-card{background:white;border:1px solid var(--border);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.integration-header{display:flex;align-items:center;gap:12px}.integration-logo{background:#eaf2ff;border:1px solid #d5e5fe;border-radius:13px;color:#0064e0;font-weight:900;font-size:22px;width:44px;height:44px;display:grid;place-items:center}
+.integration-header strong{display:block;font-size:16px}.integration-header small{display:block;font-size:11px;margin-top:4px;color:#738196}
+.integration-badge{align-self:flex-start;font-size:11px;color:#475569;padding:5px 9px;background:#f2f5f9;border-radius:30px}
+.integration-card p{color:#61748a;font-size:12px;line-height:1.65}
+.integration-card ul{margin:0 0 10px;padding-left:17px;flex:1;color:#61748a;font-size:12px;line-height:1.85}
+.integration-card button:disabled{background:#f1f4f8;color:#8795a8;padding:11px 14px;border-radius:9px;border:1px solid #e0e7ee;cursor:not-allowed;font-weight:700}
+@media(max-width:1100px){.integration-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){.integration-grid{grid-template-columns:1fr}.integration-card{padding:20px}}
