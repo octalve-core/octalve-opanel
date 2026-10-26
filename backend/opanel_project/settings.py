@@ -85,3 +85,7 @@ OPANEL_CLIENT_SECRET = os.getenv("OPANEL_CLIENT_SECRET", "")
 # Provider adapters are backend-only and default off until approved egress, token
 # storage and an account-scoped reconciliation worker are deployed.
 OPANEL_VENDOR_READBACK_ENABLED = os.getenv("OPANEL_VENDOR_READBACK_ENABLED", "").lower() in ("1", "true")
+
+# Optional direct hosting panel login is independent of Console SSO and OFF
+# until HTTPS, trusted email onboarding, MFA and abuse-prevention acceptance.
+OPANEL_TECHNICAL_LOGIN_ENABLED = os.getenv("OPANEL_TECHNICAL_LOGIN_ENABLED", "").lower() in ("1", "true")
