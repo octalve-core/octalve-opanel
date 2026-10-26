@@ -18,6 +18,7 @@ def main():
     checked, failures = 0, []
     for pattern, limit in [
         ("components/**/*.tsx", MAX_COMPONENT_LINES),
+        ("features/**/*.tsx", MAX_COMPONENT_LINES),
         ("app/**/page.tsx", MAX_ROUTE_LINES),
     ]:
         for file in ROOT.glob(pattern):

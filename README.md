@@ -55,7 +55,7 @@ With Node.js 22 and pnpm 10, run `cd frontend && pnpm install --no-frozen-lockfi
 
 For an integrated deployment set frontend `OPANEL_BACKEND_ORIGIN` (fixed HTTPS origin of the separate OPanel Django API) **at build time** and `NEXT_PUBLIC_CONSOLE_WEB_ORIGIN` (Console return address). Set backend `OPANEL_PUBLIC_ORIGIN` to the exact public Next.js host, `OPANEL_CALLBACK_URL` to its `/auth/callback/`, plus independent DB, encrypted secret and Console SSO client credentials. See [the consolidated batch runbook](docs/OPANEL_CONSOLIDATED_BATCH_AND_ACCEPTANCE_2026-10-25.md) and both `.env.example` files. OPanel provider read-back defaults off; host allowlisting is not a substitute for network-layer egress/DNS-rebinding protection.
 
-Eight technical modules now have their own inventory layouts, planned actions and explicit security prerequisites. Operations remain disabled; these screens are not mock server inventory and do not indicate provider functionality is operational. No release to `main` is permitted until the real account, deployment, CSRF/proxy and live browser acceptance checks pass.
+Eight technical modules now have their own inventory layouts, planned actions and explicit security prerequisites. Operations remain disabled; these screens are not mock server inventory and do not indicate provider functionality is operational. The owner has authorized source integration into `main`. Production release remains blocked until real account, deployment, CSRF/proxy and live browser acceptance checks pass.
 
 ## Dual infrastructure paths (26 October 2026)
 
@@ -69,3 +69,21 @@ and explicitly gated directory creation. It is a tested operation engine, not an
 installed server-management daemon. Browser management stays disabled: current
 Console grants authorize overview only. No agent enrollment, live transport,
 provider credentials or production server operations have been enabled.
+
+### Run all hosting practice pages without buying a server
+
+The local practice workspace has separate persistent simulated domains,
+subdomains, DNS records, SSL states, websites/releases/rollback, text files,
+databases, mailboxes, backup snapshots and activity. No action calls a hosting
+provider, creates an actual certificate, sends email or backs up a real server.
+It does not authorize or modify Console customer services.
+
+1. Create `.venv` and install `backend/requirements.txt`.
+2. Run `.venv/bin/python scripts/serve-practice.py` (PowerShell: `.venv\Scripts\python.exe scripts/serve-practice.py`). This creates disposable storage and listens only on `127.0.0.1:8301`.
+3. In `frontend`, install dependencies, set `OPANEL_LOCAL_PRACTICE=true`, run `pnpm build`, then `pnpm start --hostname 127.0.0.1 --port 3300`.
+4. Open `http://127.0.0.1:3300/practice/`. Keep the API process running. Data persists across page reloads during the local session and is removed when the disposable server exits.
+
+Practice API requires DEBUG, explicit enablement, a loopback Host, isolated
+configured storage, a separate signed practice cookie (24-hour renewable lifetime) and CSRF for writes. Ordinary
+builds do not proxy practice requests. Automatic deployment remains disabled;
+merging source to main does not qualify a live hosting release.

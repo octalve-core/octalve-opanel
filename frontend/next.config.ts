@@ -17,10 +17,13 @@ const config: NextConfig = {
   poweredByHeader: false,
   trailingSlash: true,
   async rewrites() {
-    if (!backend) return [];
+    const practice = process.env.OPANEL_LOCAL_PRACTICE === "true"
+      ? [{source:"/api/practice/",destination:"http://127.0.0.1:8301/api/practice/"}] : [];
+    if (!backend) return practice;
     // Browser sees ONE OPanel origin. The independent Django backend owns
     // HttpOnly session cookies, CSRF, callback and confidential Console calls.
     return [
+      ...practice,
       { source: "/api/csrf/", destination: backend + "/api/csrf/" },
       { source: "/api/session/", destination: backend + "/api/session/" },
       { source: "/api/websites/static/inspect/", destination: backend + "/api/websites/static/inspect/" },

@@ -92,3 +92,7 @@ OPANEL_TECHNICAL_LOGIN_ENABLED = os.getenv("OPANEL_TECHNICAL_LOGIN_ENABLED", "")
 
 # Static ZIP upload INSPECTION only; does not write to any hosting server.
 OPANEL_STATIC_UPLOAD_INSPECT_ENABLED = os.getenv("OPANEL_STATIC_UPLOAD_INSPECT_ENABLED", "").lower() in ("1", "true")
+
+# Local practice only. The endpoint also requires DEBUG and a loopback host.
+OPANEL_PRACTICE_ENABLED = os.getenv("OPANEL_PRACTICE_ENABLED", "") == "true"
+OPANEL_PRACTICE_DATABASE = os.getenv("OPANEL_PRACTICE_DATABASE", "")

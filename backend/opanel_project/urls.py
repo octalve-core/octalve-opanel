@@ -1,7 +1,10 @@
 from django.urls import path
 from bridge import views, technical_views, upload_views, files_views
 
+from bridge.practice.views import workspace
+
 urlpatterns = [
+    path("api/practice/", workspace),
     path("health/", views.health),
     path("auth/start/", views.start),
     path("auth/callback/", views.callback),

@@ -26,7 +26,8 @@ jobs:
       - run: corepack enable && corepack prepare pnpm@10.19.0 --activate
       - run: pnpm install --frozen-lockfile
       - run: python ../scripts/check_ui_modularity.py
-      - run: pnpm exec next build
+      - run: python -m venv ../.venv && ../.venv/bin/pip install -r ../backend/requirements.txt
+      - run: OPANEL_LOCAL_PRACTICE=true pnpm exec next build
       - run: pnpm exec tsc --noEmit
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
