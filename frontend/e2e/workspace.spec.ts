@@ -16,6 +16,11 @@ for (const width of [360,390,768,1440]) {
     await page.goto('/modules/files/');
     await expect(page.getByRole('heading',{name:'File manager',exact:true})).toBeVisible();
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    for (const slug of ['websites', 'domains', 'integrations']) {
+      await page.goto(`/modules/${slug}/`);
+      await expect(page.locator('#main-content h1')).toBeVisible();
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    }
   });
 }
 test('initial entitlement outage still allows CSRF protected logout',async({page})=>{
@@ -51,4 +56,17 @@ test('logout refreshes a token invalidated after initial page load',async({page}
   rotated=true;
   await page.getByRole('button',{name:'Sign out'}).click();
   await expect.poll(()=>accepted).toBe(true);
+});
+
+test('manual website upload stays visible and never claims a deployment',async({page})=>{
+  await page.route('**/api/session/',route=>route.fulfill({json:session}));
+  await page.goto('/modules/files/');
+  await expect(page.getByText('Upload website files')).toBeVisible();
+  await page.locator('input[type=file]').setInputFiles({
+    name:'my-static-site.zip',mimeType:'application/zip',
+    buffer:Buffer.from('placeholder-bytes'),
+  });
+  await expect(page.getByRole('button',{name:'Publish website (coming soon)'})).toBeDisabled();
+  await expect(page.getByText('my-static-site.zip',{exact:false})).toBeVisible();
+  await expect(page.getByText('Archive validated — not published')).toHaveCount(0);
 });
