@@ -40,8 +40,10 @@ def denied(request, status=403):
 
 def valid_binding(data, subject_id, service_id, binding_ref=None):
     try:
-        subject = int(data["subject_id"])
-        service = int(data["service_id"])
+        subject = data["subject_id"]
+        service = data["service_id"]
+        if type(subject) is not int or type(service) is not int or subject < 1 or service < 1:
+            return False
         binding = str(uuid.UUID(str(data["binding_ref"])))
         capabilities = data["capabilities"]
         return (subject == subject_id and service == service_id and
@@ -214,3 +216,11 @@ def logout(request):
         return HttpResponseNotAllowed(["POST"])
     request.session.flush()
     return clean(redirect("/"))
+
+
+@never_cache
+def csrf_token(request):
+    """Same-origin logout recovery; grants no hosting access."""
+    if request.method != "GET":
+        return HttpResponseNotAllowed(["GET"])
+    return clean(JsonResponse({"csrf_token": get_token(request)}))

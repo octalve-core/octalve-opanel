@@ -44,3 +44,16 @@ With Node.js 22 and pnpm 10, run `cd frontend && pnpm install --no-frozen-lockfi
 For an integrated deployment set frontend `OPANEL_BACKEND_ORIGIN` (fixed HTTPS origin of the separate OPanel Django API) **at build time** and `NEXT_PUBLIC_CONSOLE_WEB_ORIGIN` (Console return address). Set backend `OPANEL_PUBLIC_ORIGIN` to the exact public Next.js host, `OPANEL_CALLBACK_URL` to its `/auth/callback/`, plus independent DB, encrypted secret and Console SSO client credentials. See [the consolidated batch runbook](docs/OPANEL_CONSOLIDATED_BATCH_AND_ACCEPTANCE_2026-10-25.md) and both `.env.example` files. OPanel provider read-back defaults off; host allowlisting is not a substitute for network-layer egress/DNS-rebinding protection.
 
 Eight technical modules now have their own inventory layouts, planned actions and explicit security prerequisites. Operations remain disabled; these screens are not mock server inventory and do not indicate provider functionality is operational. No release to `main` is permitted until the real account, deployment, CSRF/proxy and live browser acceptance checks pass.
+
+## Dual infrastructure paths (26 October 2026)
+
+OPanel supports two implementation paths: vendor adapters for DirectAdmin/WHM,
+and an independent native Octalve account worker with no commercial-panel
+runtime dependency. See [execution and acceptance](docs/DUAL_PATH_EXECUTION_2026-10-26.md)
+and [native worker contract](docs/NATIVE_WORKER_V1.md).
+
+The native worker currently implements bounded file inventory, file-byte usage,
+and explicitly gated directory creation. It is a tested operation engine, not an
+installed server-management daemon. Browser management stays disabled: current
+Console grants authorize overview only. No agent enrollment, live transport,
+provider credentials or production server operations have been enabled.

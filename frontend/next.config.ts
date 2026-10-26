@@ -21,6 +21,7 @@ const config: NextConfig = {
     // Browser sees ONE OPanel origin. The independent Django backend owns
     // HttpOnly session cookies, CSRF, callback and confidential Console calls.
     return [
+      { source: "/api/csrf/", destination: backend + "/api/csrf/" },
       { source: "/api/session/", destination: backend + "/api/session/" },
       { source: "/auth/start/", destination: backend + "/auth/start/" },
       { source: "/auth/callback/", destination: backend + "/auth/callback/" },

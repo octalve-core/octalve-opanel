@@ -23,6 +23,8 @@ jobs:
         with:
           node-version: "22"
       - run: corepack enable && corepack prepare pnpm@10.19.0 --activate
-      - run: pnpm install --no-frozen-lockfile
-      - run: pnpm exec tsc --noEmit
+      - run: pnpm install --frozen-lockfile
       - run: pnpm exec next build
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e

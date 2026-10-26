@@ -103,3 +103,37 @@ class ProviderSafetyTests(TestCase):
             with self.assertRaises(ProviderRejected):
                 read_account(self.whm, getter=Mock())
         console.assert_not_called()
+
+    @patch("bridge.providers.console_post", side_effect=entitlement)
+    def test_directadmin_usage_is_normalized_without_exposing_credentials(self, _console):
+        from .providers import read_usage
+        config = 'error=0&username=checkhost&creator=resellerops&domain=verified.example.test&usertype=user&account=ON&suspended=no&quota=1024&bandwidth=unlimited'
+        getter = Mock(side_effect=[fake_response(config), fake_response('quota=12.5&bandwidth=42')])
+        result = read_usage(self.da, getter=getter)
+        self.assertEqual(result.disk_used_mb, 12.5)
+        self.assertEqual(result.bandwidth_used_mb, 42)
+        self.assertIsNone(result.bandwidth_limit_mb)
+
+    @patch("bridge.providers.console_post", side_effect=entitlement)
+    def test_whm_disk_usage_and_missing_bandwidth_are_distinct(self, _console):
+        from .providers import read_usage
+        payload = {'metadata':{'result':1},'data':{'acct':[{'owner':'resellerops','user':'checkhost',
+            'domain':'verified.example.test','suspended':0,'diskused':'12M','disklimit':'unlimited'}]}}
+        result = read_usage(self.whm, getter=Mock(return_value=fake_response(json.dumps(payload))))
+        self.assertEqual(result.disk_used_mb,12)
+        self.assertIsNone(result.bandwidth_used_mb)
+        self.assertIsNone(result.disk_limit_mb)
+
+    @patch("bridge.providers.console_post", side_effect=entitlement)
+    def test_malformed_vendor_payloads_fail_closed(self, _console):
+        for value in ([], {'data':[]}, {'data':None}):
+            with self.subTest(value=value), self.assertRaises(ProviderRejected):
+                read_account(self.whm,getter=Mock(return_value=fake_response(json.dumps(value))))
+
+    @patch("bridge.providers.console_post", side_effect=entitlement)
+    def test_unknown_usage_does_not_become_zero(self, _console):
+        from .providers import read_usage
+        config = 'error=0&username=checkhost&creator=resellerops&domain=verified.example.test&usertype=user&account=ON&suspended=no&quota=1024&bandwidth=1024'
+        for value in ('NaN','-1','infinity',''):
+            with self.subTest(value=value), self.assertRaises(ProviderRejected):
+                read_usage(self.da,getter=Mock(side_effect=[fake_response(config),fake_response('quota='+value+'&bandwidth=42')]))

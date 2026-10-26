@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { consoleDestination, currentSession, type HostingUsage, type PanelSession } from "@/lib/session";
+import { consoleDestination, currentSession, logoutToken, type HostingUsage, type PanelSession } from "@/lib/session";
 import { findModule, moduleGroups, modules } from "@/lib/modules";
 import { PlannedModuleDetail } from "@/components/PlannedModuleDetail";
 
@@ -73,22 +73,26 @@ export function Workspace({ selected }: { selected: string }) {
   const [session, setSession] = useState<PanelSession | null>(null);
   const [view, setView] = useState<ViewState>("loading");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [csrf, setCsrf] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
     setView("loading"); setSession(null);
+    logoutToken(controller.signal).then(token => { if (!controller.signal.aborted) setCsrf(token); }).catch(() => {});
     currentSession(controller.signal).then(data => {
+      if (data.csrf_token) setCsrf(data.csrf_token);
       setSession(data); setView(data.authenticated ? "ready" : "locked");
     }).catch(() => { if (!controller.signal.aborted) setView("error"); });
     return () => controller.abort();
   }, [selected]);
   async function signOut() {
-    if (!session?.csrf_token || signingOut) return;
+    if (signingOut) return;
     setSigningOut(true);
     try {
+      const freshToken = await logoutToken();
       const response = await fetch("/auth/logout/", {
         method: "POST", credentials: "same-origin", cache: "no-store",
-        headers: { "X-CSRFToken": session.csrf_token },
+        headers: { "X-CSRFToken": freshToken },
       });
       if (!response.ok) throw new Error("Server did not accept logout");
       window.location.assign("/");
@@ -104,6 +108,7 @@ export function Workspace({ selected }: { selected: string }) {
     <div className="gate-actions">
       {consoleUrl && <a className="primary-link" href={consoleUrl}>Return to Octalve Console</a>}
       <button type="button" onClick={() => window.location.reload()}>Retry check</button>
+      <button type="button" onClick={signOut} disabled={!csrf || signingOut}>{signingOut ? "Signing out…" : "Sign out"}</button>
     </div>
   </main>;
   const active = findModule(selected) || modules[0];

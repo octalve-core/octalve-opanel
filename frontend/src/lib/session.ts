@@ -20,6 +20,7 @@ export async function currentSession(signal?: AbortSignal): Promise<PanelSession
     method: "GET", cache: "no-store", credentials: "same-origin",
     signal, headers: { Accept: "application/json" },
   });
+  if (result.status >= 500) throw new Error("Authorization unavailable");
   if (!result.ok) return { authenticated: false };
   const body: unknown = await result.json();
   if (!body || typeof body !== "object") return { authenticated: false };
@@ -40,4 +41,12 @@ export function consoleDestination(): string | null {
         url.pathname !== "/" || url.search || url.hash) return null;
     return url.origin;
   } catch { return null; }
+}
+
+export async function logoutToken(signal?: AbortSignal): Promise<string> {
+  const result = await fetch("/api/csrf/", {cache:"no-store",credentials:"same-origin",signal});
+  if (!result.ok) throw new Error("Logout token unavailable");
+  const data = await result.json();
+  if (typeof data.csrf_token !== "string") throw new Error("Invalid logout token");
+  return data.csrf_token;
 }
