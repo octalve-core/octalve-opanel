@@ -15,7 +15,8 @@ export function HostingModule({slug, session}: {slug:string; session:PanelSessio
       <div className="metric"><h3>Disk</h3><UsageMeter used={session.overview.usage.disk_used_mb} limit={session.overview.usage.disk_limit_mb}/></div>
       <div className="metric"><h3>Bandwidth</h3><UsageMeter used={session.overview.usage.bandwidth_used_mb} limit={session.overview.usage.bandwidth_limit_mb}/></div>
     </div> : <div className="empty-slate">No recorded usage is available.</div>}</div>;
-  if (slug === "files") return <WebsiteUpload />;\n  if (slug === "integrations") return <IntegrationHub />;
+  if (slug === "files") return <WebsiteUpload />;
+  if (slug === "integrations") return <IntegrationHub />;
   if (slug === "settings") return <div className="detail-panel"><h2>Hosting access</h2>
     <div className="property"><span>Console service</span><strong>#{session.service_id}</strong></div>
     <div className="property"><span>Sign-in authority</span><strong>Octalve Console</strong></div>
