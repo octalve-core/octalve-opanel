@@ -60,7 +60,7 @@ test('logout refreshes a token invalidated after initial page load',async({page}
 
 test('manual website upload stays visible and never claims a deployment',async({page})=>{
   await page.route('**/api/session/',route=>route.fulfill({json:session}));
-  await page.goto('/modules/files/');
+  await page.goto('/modules/websites/');
   await expect(page.getByText('Upload website files')).toBeVisible();
   await page.locator('input[type=file]').setInputFiles({
     name:'my-static-site.zip',mimeType:'application/zip',
@@ -69,4 +69,30 @@ test('manual website upload stays visible and never claims a deployment',async({
   await expect(page.getByRole('button',{name:'Publish website (coming soon)'})).toBeDisabled();
   await expect(page.getByText('my-static-site.zip',{exact:false})).toBeVisible();
   await expect(page.getByText('Archive validated — not published')).toHaveCount(0);
+});
+
+test('File Manager has browsable example tree but never fabricates server contents',async({page})=>{
+  await page.route('**/api/session/',route=>route.fulfill({json:session}));
+  await page.route('**/api/files/list/**',route=>route.fulfill({
+    status:503,json:{connected:false,error:'Not connected'}
+  }));
+  await page.setViewportSize({width:390,height:860});
+  await page.goto('/modules/files/');
+  await expect(page.getByRole('heading',{name:'File manager',exact:true})).toBeVisible();
+  await expect(page.getByText('Server folders are not connected yet')).toBeVisible();
+  await expect(page.getByRole('button',{name:'public_html'})).toHaveCount(0);
+  await page.getByRole('button',{name:'Example preview'}).click();
+  await expect(page.getByText('Example preview — not your server')).toBeVisible();
+  await page.getByRole('button',{name:'public_html'}).first().click();
+  await expect(page.getByRole('button',{name:'index.html'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'assets'}).first()).toBeVisible();
+  await page.getByRole('button',{name:'index.html'}).click();
+  await expect(page.getByText('Example only')).toBeVisible();
+  await expect(page.getByRole('button',{name:'Rename'})).toBeDisabled();
+  await expect(page.getByRole('button',{name:'Delete'})).toBeDisabled();
+  await expect(page.getByRole('link',{name:'Open website upload'})).toHaveAttribute('href','/modules/websites/');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.getByRole('button',{name:'My server files'}).click();
+  await expect(page.getByText('Server folders are not connected yet')).toBeVisible();
+  await expect(page.getByRole('button',{name:'public_html'})).toHaveCount(0);
 });
