@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./uploads.css";
+import "./integrations.css";
+import "./technical-access.css";
 export const metadata: Metadata = {
   title: "Octalve OPanel | Hosting Management",
   description: "Secure, independent hosting management through Octalve Console.",
