@@ -5,6 +5,8 @@ import Link from "next/link";
 import { consoleDestination, currentSession, logoutToken, type HostingUsage, type PanelSession } from "@/lib/session";
 import { findModule, moduleGroups, modules } from "@/lib/modules";
 import { PlannedModuleDetail } from "@/components/PlannedModuleDetail";
+import { IntegrationHub } from "@/components/IntegrationHub";
+import { TechnicalAccessSettings } from "@/components/TechnicalAccessSettings";
 
 type ViewState = "loading" | "ready" | "locked" | "error";
 const ACTIVE = new Set(["overview", "statistics", "settings"]);
@@ -60,12 +62,13 @@ function ReadOnlyModule({slug, session}: {slug:string; session:PanelSession}) {
       <div className="metric"><h3>Disk</h3><Amount used={session.overview.usage.disk_used_mb} limit={session.overview.usage.disk_limit_mb}/></div>
       <div className="metric"><h3>Bandwidth</h3><Amount used={session.overview.usage.bandwidth_used_mb} limit={session.overview.usage.bandwidth_limit_mb}/></div>
     </div> : <div className="empty-slate">No recorded usage is available.</div>}</div>;
+  if (slug === "integrations") return <IntegrationHub />;
   if (slug === "settings") return <div className="detail-panel"><h2>Hosting access</h2>
     <div className="property"><span>Console service</span><strong>#{session.service_id}</strong></div>
     <div className="property"><span>Sign-in authority</span><strong>Octalve Console</strong></div>
     <div className="property"><span>Session scope</span><strong>One verified hosting service</strong></div>
     <div className="property"><span>Technical operations</span><strong>Not enabled</strong></div>
-    <p>No separate OPanel password, billing record, or provider administrator account is stored in this interface.</p></div>;
+    <p>Console remains the authority for this hosting service. An optional separate technical login can be enrolled only after successful Console sign-in; it is not a provider administrator password.</p><TechnicalAccessSettings /></div>;
   return <PlannedModuleDetail slug={slug} />;
 }
 
@@ -103,7 +106,7 @@ export function Workspace({ selected }: { selected: string }) {
     <div className="gate-brand"><span className="logo-mark">O</span> Octalve <b>OPANEL</b></div>
     {view === "loading" ? <><h1>Verifying hosting access</h1><p>Checking your current Console service entitlement.</p></> :
       view === "locked" ? <><h1>Hosting access is unavailable</h1>
-        <p>Sign into Octalve Console and open an eligible, provider-confirmed hosting service. OPanel does not use a separate customer password.</p></> :
+        <p>Open an eligible hosting service in Console. If separately enabled, you may also sign in using your service-specific technical credentials.</p>{process.env.NEXT_PUBLIC_OPANEL_TECHNICAL_LOGIN_ENABLED === "true" && <Link href="/login/">Use technical hosting login</Link>}</> :
         <><h1>Unable to verify access</h1><p>The authorization service is unavailable. Technical actions are blocked.</p></>}
     <div className="gate-actions">
       {consoleUrl && <a className="primary-link" href={consoleUrl}>Return to Octalve Console</a>}
