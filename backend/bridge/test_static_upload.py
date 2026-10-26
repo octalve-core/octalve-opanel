@@ -43,6 +43,8 @@ class StaticZipValidationTests(SimpleTestCase):
                                            (invalid, b"payload")]))
         with self.assertRaises(UploadRefused):
             inspect_static_zip(zipped([("nested/index.html", b"wrong-root")]))
+        with self.assertRaises(UploadRefused):
+            inspect_static_zip(zipped([("INDEX.HTML", b"not a server index")]))
 
     def test_duplicate_case_collision_and_zip_bomb(self):
         with self.assertRaises(UploadRefused):
