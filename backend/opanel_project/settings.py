@@ -89,3 +89,6 @@ OPANEL_VENDOR_READBACK_ENABLED = os.getenv("OPANEL_VENDOR_READBACK_ENABLED", "")
 # Optional direct hosting panel login is independent of Console SSO and OFF
 # until HTTPS, trusted email onboarding, MFA and abuse-prevention acceptance.
 OPANEL_TECHNICAL_LOGIN_ENABLED = os.getenv("OPANEL_TECHNICAL_LOGIN_ENABLED", "").lower() in ("1", "true")
+
+# Static ZIP upload INSPECTION only; does not write to any hosting server.
+OPANEL_STATIC_UPLOAD_INSPECT_ENABLED = os.getenv("OPANEL_STATIC_UPLOAD_INSPECT_ENABLED", "").lower() in ("1", "true")
