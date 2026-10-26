@@ -24,6 +24,7 @@ const config: NextConfig = {
       { source: "/api/csrf/", destination: backend + "/api/csrf/" },
       { source: "/api/session/", destination: backend + "/api/session/" },
       { source: "/api/websites/static/inspect/", destination: backend + "/api/websites/static/inspect/" },
+      { source: "/api/files/list/", destination: backend + "/api/files/list/" },
       { source: "/auth/technical-login/", destination: backend + "/auth/technical-login/" },
       { source: "/api/technical-access/", destination: backend + "/api/technical-access/" },
       { source: "/api/technical-access/enroll/", destination: backend + "/api/technical-access/enroll/" },
