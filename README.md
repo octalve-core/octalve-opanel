@@ -2,6 +2,8 @@
 
 # Octalve OPanel
 
+Current gap audit and native backend evidence: [Hosting completeness](docs/HOSTING_COMPLETENESS.md). Native engines are operator-only building blocks; connecting a VPS alone does not complete the remaining hosting services.
+
 Independent technical hosting management product, maintained in `octalve-core/octalve-opanel`. Octalve Console retains commercial identity, service entitlement, billing and provisioning authority.
 
 ## Batch 3/4 — Manual website upload, DNS and integrations (26 October 2026)
