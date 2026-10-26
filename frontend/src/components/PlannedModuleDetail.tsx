@@ -2,34 +2,6 @@
 
 /** Module-specific UI structure. Not a fake database or enabled provider API. */
 const contracts = {
-  websites: {
-    title: "Hosted websites", subtitle: "Manage document roots, web runtimes and site configuration.",
-    actions: ["Add website", "Manage PHP"], headers: ["Website", "Document root", "Runtime", "Status"],
-    empty: "No verified provider website listing has been connected.",
-    note: "Website creation must validate this service's exact provisioned account and supported hosting package before issuing a vendor command.",
-    details: ["PHP and runtime settings", "Redirects and error pages", "Website analytics"],
-  },
-  files: {
-    title: "Hosting files", subtitle: "Browse and work with files in your own hosting account.",
-    actions: ["Upload files", "New folder"], headers: ["File or folder", "File type", "Size", "Modified"],
-    empty: "The account-scoped file tree is not connected yet.",
-    note: "File operations require path canonicalisation, traversal protection, upload-size limits, extension policies, malware scanning and a restricted account-scoped token.",
-    details: ["Folder permissions", "Archive extraction", "Upload security"],
-  },
-  domains: {
-    title: "Attached domains", subtitle: "Manage primary domain, parked domains and subdomains.",
-    actions: ["Add domain", "Create subdomain"], headers: ["Domain", "Domain type", "DNS connection", "Status"],
-    empty: "No authoritative provider domain inventory is available.",
-    note: "A hosting account's domain list is not proof of domain ownership or registrar rights. Verify ownership and DNS authority independently.",
-    details: ["Subdomains", "Domain redirects", "DNS connection status"],
-  },
-  dns: {
-    title: "DNS zone records", subtitle: "Review records under a separately verified authoritative DNS zone.",
-    actions: ["Add DNS record", "Import zone"], headers: ["Type", "Name", "Value", "TTL"],
-    empty: "No verified authoritative zone has been connected.",
-    note: "Console remains responsible for domain commercial authority; DNS mutations require confirmed zone delegation, ownership and provider-specific atomic updates.",
-    details: ["A / AAAA / CNAME", "MX / TXT / CAA", "Zone ownership verification"],
-  },
   databases: {
     title: "Hosting databases", subtitle: "Manage isolated databases and dedicated database users.",
     actions: ["Create database", "Add database user"], headers: ["Database", "Engine", "Allocated user", "Status"],
