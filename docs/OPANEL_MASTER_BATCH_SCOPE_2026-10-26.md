@@ -8,11 +8,17 @@
 
 This repository owns OPanel Django backend, independently deployed Next.js frontend, database-backed Secure HttpOnly OPanel session, browser callback, per-account management authorization, provider or native technical operation adapters, audit and release.
 
-Octalve Console **only** owns customer identity/password, order, retail price/markup, payment/receipt, domain commerce, provider hosting proof, subscription and per-service technical entitlement. OPanel does not store its own customer passwords, settle invoices or take registrar payment. Its server-only account adapters must verify current Console ownership, service status and operation-specific capabilities before performing management requests.
+Octalve Console **only** owns commercial customer identity/password, order, retail price/markup, payment/receipt, domain commerce, provider hosting proof, subscription and per-service technical entitlement. OPanel does not store its own customer passwords, settle invoices or take registrar payment. Its server-only account adapters must verify current Console ownership, service status and operation-specific capabilities before performing management requests.
 
 **Current state confirmed 26 Oct:** responsive independent frontend and own SSO backend, overview, native account-worker prototype (`files.list`, `usage.read`, gated `files.mkdir`), non-public management boundary and provider read-only foundation are committed under PR #1; 3 GitHub CI workflows passed on earlier current head. Production technical operations, node enrollment, file upload, public DNS change, database provisioning and WordPress installer remain unavailable. The customer must not see those features enabled based on UI alone.
 
 **Critical pin mismatch:** current `.github/workflows/opanel-contract.yml` pins Console commit `a594d15b8e781506553f66e9d2a53301c94d6b7f`, not the newer Console PR #14. Before release, update to the explicitly approved final Console SHA and verify cross-repository contract on disposable databases.
+
+### Optional second *technical* OPanel login (approved 26 October)
+
+The default remains Console → OPanel PKCE SSO. Independently, an already entitled Console customer can opt into a **service-scoped OPanel technical username/password** after SSO enrollment. Passwords are salted/hashed only in OPanel, never returned in email. A separate OPanel direct login rechecks current Console ownership/provider account proof on every session; it does **not** create a commercial billing identity, a root/WHM provider administrator, or a WordPress login. Feature is gated OFF by default until MFA, distributed throttling, recovery and HTTPS acceptance. See [dual login and integrations](OPANEL_DUAL_LOGIN_AND_INTEGRATIONS_2026-10-26.md).
+
+The **Integrations** sidebar now has clearly disabled WordPress/Softaculous, Cloudflare and GitHub static deployment contracts. Plan/runtime capability proof, domain/zone/repository ownership and per-operation grants are required before connecting any of them. Never claim Node.js/Next.js SSR is supported by a static-only shared-hosting plan.
 
 ## 1. OPanel user flow by hosting backend
 
