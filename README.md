@@ -1,3 +1,5 @@
+> **EXECUTION STATUS — 26 OCTOBER 2026:** Follow the [OPanel implementation batch scope](docs/OPANEL_MASTER_BATCH_SCOPE_2026-10-26.md), coordinated with the [Octalve Cloud master roadmap](https://github.com/octalve-core/octalve-console/blob/phase/cloud-paid-provisioning-opanel-foundation/docs/CLOUD_MASTER_EXECUTION_PLAN_2026-10-26.md). OPanel [PR #1](https://github.com/octalve-core/octalve-opanel/pull/1) remains Review-only and independent from Console. Cross-repo SSO and native worker tests do not mean a vendor account or public website has been created; provider mutations, WordPress installer and live file upload remain unqualified. 
+
 # Octalve OPanel
 
 Independent technical hosting management product, maintained in `octalve-core/octalve-opanel`. Octalve Console retains commercial identity, service entitlement, billing and provisioning authority.
