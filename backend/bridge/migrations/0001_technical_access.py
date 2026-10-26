@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="HostingTechnicalLogin",
             fields=[
-                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
                 ("service_id", models.PositiveBigIntegerField(unique=True)),
                 ("subject_id", models.PositiveBigIntegerField()),
                 ("binding_ref", models.UUIDField()),
