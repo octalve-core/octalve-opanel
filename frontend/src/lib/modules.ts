@@ -8,6 +8,7 @@ export const modules = [
   { slug: "email", name: "Email accounts", group: "Advanced", symbol: "✉", description: "Mailboxes, aliases and webmail access.", available: false },
   { slug: "ssl", name: "SSL certificates", group: "Advanced", symbol: "◇", description: "Certificate lifecycle and HTTPS settings.", available: false },
   { slug: "backups", name: "Backups", group: "Advanced", symbol: "↺", description: "Create and restore verified backups.", available: false },
+  { slug: "integrations", name: "Integrations", group: "Hosting", symbol: "⬡", description: "WordPress, Cloudflare DNS and GitHub static deployment connectors.", available: false },
   { slug: "statistics", name: "Resource usage", group: "Advanced", symbol: "▦", description: "Historical disk and bandwidth measurements.", available: true },
   { slug: "settings", name: "Settings", group: "Account", symbol: "⚙", description: "Review access authority and session settings.", available: true },
 ] as const;
