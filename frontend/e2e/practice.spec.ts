@@ -12,6 +12,7 @@ test('practice domain DNS SSL and restore use persisted isolated API',async({pag
  await page.getByRole('button',{name:'Add DNS record'}).click();
  await expect(page.getByText('192.0.2.1',{exact:false})).toBeVisible();
  await page.getByRole('link',{name:'SSL certificates',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'SSL certificates',exact:true})).toBeVisible();
  await page.getByLabel('Domain',{exact:true}).selectOption('example.test');
  await page.getByRole('button',{name:'Request certificate'}).click();
  await page.getByRole('button',{name:'Simulate validation'}).click();

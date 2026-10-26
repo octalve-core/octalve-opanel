@@ -1,4 +1,4 @@
-> **EXECUTION STATUS — 26 OCTOBER 2026:** Follow the [OPanel implementation batch scope](docs/OPANEL_MASTER_BATCH_SCOPE_2026-10-26.md), coordinated with the [Octalve Cloud master roadmap](https://github.com/octalve-core/octalve-console/blob/phase/cloud-paid-provisioning-opanel-foundation/docs/CLOUD_MASTER_EXECUTION_PLAN_2026-10-26.md). OPanel [PR #1](https://github.com/octalve-core/octalve-opanel/pull/1) remains Review-only and independent from Console. Cross-repo SSO and native worker tests do not mean a vendor account or public website has been created; provider mutations, WordPress installer and live file upload remain unqualified. 
+> **EXECUTION STATUS — 26 OCTOBER 2026:** Follow the [OPanel implementation batch scope](docs/OPANEL_MASTER_BATCH_SCOPE_2026-10-26.md), coordinated with the [Octalve Cloud master roadmap](https://github.com/octalve-core/octalve-console/blob/phase/cloud-paid-provisioning-opanel-foundation/docs/CLOUD_MASTER_EXECUTION_PLAN_2026-10-26.md). OPanel [PR #1](https://github.com/octalve-core/octalve-opanel/pull/1) is authorized for source integration into main and remains independent from Console; Production release is not authorized. Cross-repo SSO and native worker tests do not mean a vendor account or public website has been created; provider mutations, WordPress installer and live file upload remain unqualified.
 
 # Octalve OPanel
 
@@ -16,7 +16,7 @@ An **Integrations** area now groups WordPress/Softaculous, Cloudflare DNS, and G
 
 ## Customer sign-in contract (owner-confirmed, 25 October 2026)
 
-**One customer login: Octalve Console.** OPanel must not offer a second customer registration, password login, or password reset.
+**Commercial customer identity remains in Octalve Console.** The original Console-only entry design is extended by the separately gated service-specific technical login described above; OPanel has no independent customer registration or billing identity.
 
 1. Customer signs into Console and opens an **active, provider-confirmed provisioned** hosting service they own.
 2. Console authorizes **Manage hosting / Open OPanel** for that exact service; pending, suspended, expired, terminated and unprovisioned services are denied.
@@ -34,11 +34,11 @@ Integration references: `octalve-core/octalve-console` PR #13 and PR #14. [Detai
 
 ## Developer execution (no real provider or payment)
 
-The independent backend is under backend/. With Python 3.12 and an isolated environment, install the pinned requirements with python -m pip install -r backend/requirements.txt. Then, from the backend/ directory, set DEBUG=true and run python manage.py test bridge. Initial startup also requires the standard Django session migrations. There are no OPanel customer user/password records. Every dashboard view revalidates the Console service entitlement, and external overview fields are validated and HTML-escaped before display.
+The independent backend is under backend/. With Python 3.12 and an isolated environment, install the pinned requirements with python -m pip install -r backend/requirements.txt. Then, from the backend/ directory, set DEBUG=true and run python manage.py test bridge. Initial startup also requires the standard Django session migrations. Optional technical access stores service-specific password hashes; Console customer passwords are never copied. Every dashboard view revalidates the Console service entitlement, and external overview fields are validated and HTML-escaped before display.
 
 Production requires DJANGO_SECRET_KEY, DATABASE_URL, ALLOWED_HOSTS, CONSOLE_WEB_ORIGIN, CONSOLE_API_BASE (ends in /api), OPANEL_CALLBACK_URL (fixed HTTPS /auth/callback/), OPANEL_CLIENT_ID, and OPANEL_CLIENT_SECRET, configured in the deployment secret store. The secret must match Console's client secret, must not be committed and must not be reused as a provider token. Console separately requires OPANEL_ISSUER_ENABLED=true once genuinely qualified. All four URLs must be verified before enabling live launch.
 
-Start endpoint: GET /auth/start/?service_id=<Console hosting service id>. After Console grants the short-lived one-time code, the callback sets an independent server-side session. The first independent interface is now a responsive, Octalve-branded read-only hosting dashboard. It displays the fresh Console-entitled service, domain, billing date, and optional historical usage snapshot; unavailable provider tools are visibly disabled. Actual technical management remains disabled. The system does not have an OPanel registration or password form.
+Start endpoint: GET /auth/start/?service_id=<Console hosting service id>. After Console grants the short-lived one-time code, the callback sets an independent server-side session. The first independent interface is now a responsive, Octalve-branded read-only hosting dashboard. It displays the fresh Console-entitled service, domain, billing date, and optional historical usage snapshot; unavailable provider tools are visibly disabled. Actual technical management remains disabled. There is no OPanel customer registration; the optional technical sign-in form is disabled by default.
 
 ## Read-only dashboard acceptance
 
