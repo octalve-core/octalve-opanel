@@ -84,7 +84,7 @@ class FileInventoryContractTests(TestCase):
             resolve_live_file_provider({"service_id":13})
 
 
-class FileInventoryHttpTests(SimpleTestCase):
+class FileInventoryHttpTests(TestCase):
     def test_anonymous_and_wrong_methods_are_denied(self):
         browser=Client()
         self.assertEqual(browser.get("/api/files/list/").status_code,401)
