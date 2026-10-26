@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - "frontend/**"
+      - "scripts/check_ui_modularity.py"
       - ".github/workflows/opanel-web.yml"
   push:
     branches:
@@ -24,6 +25,7 @@ jobs:
           node-version: "22"
       - run: corepack enable && corepack prepare pnpm@10.19.0 --activate
       - run: pnpm install --frozen-lockfile
+      - run: python ../scripts/check_ui_modularity.py
       - run: pnpm exec next build
       - run: pnpm exec tsc --noEmit
       - run: pnpm exec playwright install --with-deps chromium
