@@ -20,7 +20,9 @@ class NativeConfigToolsTests(TestCase):
         executable=self.tool('named-checkzone')
         with tempfile.TemporaryDirectory() as tmp:
             zone=Path(tmp)/'example.zone'
-            zone.write_text(compile_zone('example.test',[{'name':'@','type':'A','value':'192.0.2.1','ttl':300}],serial=1,nameservers=['ns1.provider.test']))
+            records=[{'name':name,'type':'A','value':'192.0.2.1','ttl':300} for name in ['@','ns1','mail','sip']]
+            records += [{'name':'@','type':'MX','value':'mail.example.test','priority':10,'ttl':300}, {'name':'_sip._tcp','type':'SRV','value':'sip.example.test','priority':10,'weight':1,'port':5060,'ttl':300}]
+            zone.write_text(compile_zone('example.test',records,serial=1,nameservers=['ns1.example.test']))
             result=subprocess.run([executable,'example.test',str(zone)],capture_output=True,text=True,timeout=15)
             self.assertEqual(result.returncode,0,result.stderr+result.stdout)
     def test_nginx_accepts_generated_site_configuration(self):

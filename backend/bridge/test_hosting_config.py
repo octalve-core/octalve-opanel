@@ -7,7 +7,7 @@ class HostingDNSTests(TestCase):
     def test_real_zone_parser_reads_typed_records(self):
         import dns.zone
         from native_agent.dns import compile_zone
-        records=[{'name':'@','type':'A','value':'192.0.2.5','ttl':300},
+        records=[{'name':host,'type':'A','value':'192.0.2.6','ttl':300} for host in ['ns1','mail','sip']]+[{'name':'@','type':'A','value':'192.0.2.5','ttl':300},
                  {'name':'www','type':'CNAME','value':'example.test','ttl':300},
                  {'name':'@','type':'MX','value':'mail.example.test','priority':10,'ttl':300},
                  {'name':'_dmarc','type':'TXT','value':'v=DMARC1; p=reject','ttl':300},
@@ -68,3 +68,27 @@ class HostingCertificateTests(TestCase):
         cert,key=self.certificate(); _,other=self.certificate(); expired,old_key=self.certificate(expired=True)
         for c,k,domains in [(cert,other,['example.test']),(cert,key,['foreign.test']),(expired,old_key,['example.test'])]:
             with self.assertRaises(Refused): inspect_certificate(c,k,domains=domains)
+
+class HostingDNSIntegrityTests(TestCase):
+    def test_missing_nameserver_address_and_reference_aliases_rejected(self):
+        from native_agent.dns import compile_zone
+        from native_agent.filesystem import Refused
+        def row(name,kind,value,**extra): return {'name':name,'type':kind,'value':value,'ttl':300,**extra}
+        cases=[([],['ns1.example.test']),
+               ([row('ns1','CNAME','other.test')],['ns1.example.test']),
+               ([row('mail','CNAME','other.test'),row('@','MX','mail.example.test',priority=10)],['ns1.provider.test']),
+               ([row('sip','CNAME','other.test'),row('_sip._tcp','SRV','sip.example.test',priority=10,weight=1,port=5060)],['ns1.provider.test'])]
+        for records,nameservers in cases:
+            with self.subTest(records=records), self.assertRaises(Refused): compile_zone('example.test',records,serial=1,nameservers=nameservers)
+    def test_generated_nameserver_duplicate_and_ttl_conflict_rejected(self):
+        from native_agent.dns import compile_zone
+        from native_agent.filesystem import Refused
+        for ttl in (300,3600):
+            with self.assertRaises(Refused): compile_zone('example.test',[{'name':'@','type':'NS','value':'ns1.provider.test','ttl':ttl}],serial=1,nameservers=['ns1.provider.test'])
+    def test_delegated_names_outside_glue_scope_do_not_require_parent_zone_addresses(self):
+        from native_agent.dns import compile_zone
+        result=compile_zone('example.test',[
+            {'name':'child','type':'NS','value':'ns.provider.test','ttl':300},
+            {'name':'@','type':'MX','value':'mail.child.example.test','priority':10,'ttl':300}
+        ],serial=1,nameservers=['ns1.provider.test'])
+        self.assertIn('mail.child.example.test.',result)

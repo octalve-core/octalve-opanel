@@ -29,13 +29,16 @@ def compile_zone(zone,records,*,serial,nameservers):
     if not isinstance(records,list) or len(records)>500: raise Refused('Zone record budget exceeded.')
     lines=[f'$ORIGIN {zone}.','$TTL 300',f'@ 300 IN SOA {nameservers[0]}. hostmaster.{zone}. ({serial} 3600 600 1209600 300)']
     lines.extend(f'@ 300 IN NS {ns}.' for ns in nameservers)
-    types={zone:{'SOA','NS'}}; ttls={}; seen=set(); aliases={}
+    types={zone:{'SOA','NS'}}; ttls={(zone,'NS'):300}
+    seen={(zone,'NS',ns+'.') for ns in nameservers}; aliases={}
+    references=[('NS',zone,ns) for ns in nameservers]
     for record in records:
         if not isinstance(record,dict): raise Refused('Invalid record.')
         kind=record.get('type'); name=record.get('name'); value=record.get('value'); ttl=record.get('ttl')
         fields={'name','type','value','ttl'}|({'priority'} if kind=='MX' else {'priority','weight','port'} if kind=='SRV' else {'flags','tag'} if kind=='CAA' else set())
         if set(record)!=fields: raise Refused('Unsupported record fields.')
         number(ttl,60,86400)
+        if not isinstance(value,str): raise Refused('Record value must be text.')
         if not isinstance(name,str): raise Refused('Invalid record name.')
         if name=='@': name=zone
         elif name.endswith('.'): name=name[:-1]
@@ -65,7 +68,16 @@ def compile_zone(zone,records,*,serial,nameservers):
         if identity in seen: raise Refused('Duplicate record.')
         seen.add(identity)
         if kind=='CNAME': aliases[name]=value
+        if kind in ('NS','MX','SRV'): references.append((kind,name,value))
         lines.append(f'{name}. {ttl} IN {kind} {data}')
+    delegations={name for name,kinds in types.items() if name!=zone and 'NS' in kinds}
+    for kind,owner,target in references:
+        if target in aliases: raise Refused('NS, MX and SRV targets cannot be aliases.')
+        in_zone=target==zone or target.endswith('.'+zone)
+        delegated=any(target==cut or target.endswith('.'+cut) for cut in delegations)
+        glue=kind=='NS' and owner!=zone and (target==owner or target.endswith('.'+owner))
+        if ((in_zone and not delegated) or glue) and not types.get(target,set()) & {'A','AAAA'}:
+            raise Refused('In-zone reference requires address records or delegation glue.')
     for start in aliases:
         visited=set(); current=start
         while current in aliases:

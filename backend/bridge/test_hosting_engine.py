@@ -11,7 +11,7 @@ class HostingEngineTests(TestCase):
         self.tmp=tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name)/'account'; self.root.mkdir()
         self.control=Path(self.tmp.name)/'control'; self.control.mkdir(mode=0o700)
-        self.engine=HostingEngine(self.root,self.control,service_id=13,binding_ref='binding-13',domains=['example.test','www.example.test'],nameservers=['ns1.example.test'],capabilities=set(OPERATIONS))
+        self.engine=HostingEngine(self.root,self.control,service_id=13,binding_ref='binding-13',domains=['example.test','www.example.test'],nameservers=['ns1.provider.test'],capabilities=set(OPERATIONS))
         self.addCleanup(self.engine.close)
     def execute(self,operation,data=None,**kwargs):
         return self.engine.execute(service_id=13,operation=operation,data=data or {},request_id=uuid.uuid4().hex,confirmed=True,**kwargs)
@@ -23,7 +23,7 @@ class HostingEngineTests(TestCase):
         self.assertEqual(self.execute('usage.read')['file_bytes'],24)
     def test_default_disabled_wrong_service_and_unconfirmed_mutations(self):
         from native_agent.engine import HostingEngine
-        other=HostingEngine(self.root,self.control,service_id=13,binding_ref='binding-13',domains=['example.test'],nameservers=['ns1.example.test'])
+        other=HostingEngine(self.root,self.control,service_id=13,binding_ref='binding-13',domains=['example.test'],nameservers=['ns1.provider.test'])
         try:
             with self.assertRaises(Refused): other.execute(service_id=13,operation='files.list',data={},request_id=uuid.uuid4().hex)
             with self.assertRaises(Refused): self.engine.execute(service_id=14,operation='files.list',data={},request_id=uuid.uuid4().hex)
