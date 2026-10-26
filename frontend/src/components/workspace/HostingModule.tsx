@@ -6,6 +6,7 @@ import {IntegrationHub} from "@/components/IntegrationHub";
 import {TechnicalAccessSettings} from "@/components/TechnicalAccessSettings";
 import {WebsiteUpload} from "@/components/WebsiteUpload";
 import {DomainConnection} from "@/components/DomainConnection";
+import {FileManager} from "@/features/files/FileManager";
 import {UsageMeter} from "./UsageMeter";
 export function HostingModule({slug, session}: {slug:string; session:PanelSession}) {
   const module = findModule(slug);
@@ -16,7 +17,8 @@ export function HostingModule({slug, session}: {slug:string; session:PanelSessio
       <div className="metric"><h3>Disk</h3><UsageMeter used={session.overview.usage.disk_used_mb} limit={session.overview.usage.disk_limit_mb}/></div>
       <div className="metric"><h3>Bandwidth</h3><UsageMeter used={session.overview.usage.bandwidth_used_mb} limit={session.overview.usage.bandwidth_limit_mb}/></div>
     </div> : <div className="empty-slate">No recorded usage is available.</div>}</div>;
-  if (slug === "files" || slug === "websites") return <WebsiteUpload />;
+  if (slug === "files") return <FileManager session={session} />;
+  if (slug === "websites") return <WebsiteUpload />;
   if (slug === "domains" || slug === "dns") return <DomainConnection session={session} />;
   if (slug === "integrations") return <IntegrationHub />;
   if (slug === "settings") return <div className="detail-panel"><h2>Hosting access</h2>
