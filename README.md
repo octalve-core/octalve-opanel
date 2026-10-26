@@ -4,6 +4,10 @@
 
 Independent technical hosting management product, maintained in `octalve-core/octalve-opanel`. Octalve Console retains commercial identity, service entitlement, billing and provisioning authority.
 
+## Batch 3/4 — Manual website upload, DNS and integrations (26 October 2026)
+
+The module-first delivery plan and exact Review limitations are recorded in [OPanel Batch 3/4](docs/OPANEL_BATCH_3_4_STATIC_UPLOAD_AND_CONNECTORS_2026-10-26.md). Customers will retain manual static website ZIP upload alongside selected-GitHub-repository deployments. A CSRF-protected, Console-entitlement-scoped archive inspection service and a confined offline first-publication worker are implemented and synthetically tested; **no real hosting server publication or public website has been qualified**. Provider DNS/WordPress/GitHub writes, customer Publish and registrar purchase stay disabled until external acceptance. The UI is broken into independent workspaces, module components, integrations catalog and upload/connection views rather than one long file.
+
 ## Optional technical login and initial integrations (26 October 2026)
 
 **Console → OPanel single sign-on stays the default.** A new, separately gated hosting technical username/password is now supported as an optional second way to enter OPanel after initial Console SSO enrollment. It is **not** a duplicate Console customer account or the WHM/DirectAdmin server login. Technical passwords are hashed in the independent OPanel DB, never emailed, and a successful direct login must still pass live Console entitlement. The frontend and backend flags remain OFF until MFA/recovery/distributed throttling and deployment acceptance.
