@@ -4,6 +4,12 @@
 
 Independent technical hosting management product, maintained in `octalve-core/octalve-opanel`. Octalve Console retains commercial identity, service entitlement, billing and provisioning authority.
 
+## Optional technical login and initial integrations (26 October 2026)
+
+**Console → OPanel single sign-on stays the default.** A new, separately gated hosting technical username/password is now supported as an optional second way to enter OPanel after initial Console SSO enrollment. It is **not** a duplicate Console customer account or the WHM/DirectAdmin server login. Technical passwords are hashed in the independent OPanel DB, never emailed, and a successful direct login must still pass live Console entitlement. The frontend and backend flags remain OFF until MFA/recovery/distributed throttling and deployment acceptance.
+
+An **Integrations** area now groups WordPress/Softaculous, Cloudflare DNS, and GitHub static publishing, with account/runtime proof requirements; each real connector remains disabled. See [dual login + integrations specification](docs/OPANEL_DUAL_LOGIN_AND_INTEGRATIONS_2026-10-26.md).
+
 ## Customer sign-in contract (owner-confirmed, 25 October 2026)
 
 **One customer login: Octalve Console.** OPanel must not offer a second customer registration, password login, or password reset.
