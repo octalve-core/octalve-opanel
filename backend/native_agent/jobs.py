@@ -24,6 +24,14 @@ MAX_BYTES = 6 * 1024 * 1024
 TERMINAL = frozenset({'succeeded', 'failed', 'unknown', 'cancelled'})
 
 
+class InvalidCompletionResult(Refused):
+    """Completion result cannot be encoded within the queue budget."""
+
+
+class ExpiredJobLease(Refused):
+    """Completion refused after the job was durably marked unknown."""
+
+
 def _positive_id(value):
     if type(value) is not int or value < 1:
         raise Refused('Invalid subject or service.')
@@ -216,11 +224,18 @@ class JobStore:
     def finish(self, job_id, lease_token, *, outcome, result=None, now=None):
         if outcome not in ('succeeded', 'failed', 'unknown') or not isinstance(lease_token, str):
             raise Refused('Invalid completion.')
-        encoded = _encode(result) if result is not None else None
+        try:
+            encoded = _encode(result) if result is not None else None
+        except Refused as exc:
+            raise InvalidCompletionResult(str(exc)) from exc
         accepted = False
+        expired = False
         with self._transaction() as db:
             # A lease may expire while BEGIN IMMEDIATE waits for another writer.
             now = _timestamp(now)
+            row = db.execute('SELECT * FROM jobs WHERE id=?', (job_id,)).fetchone()
+            expired = bool(row and row['state'] == 'running' and row['lease_until'] <= now
+                           and hmac.compare_digest(row['lease_hash'], self._digest(lease_token.encode())))
             self._expire(db, now)
             row = db.execute('SELECT * FROM jobs WHERE id=?', (job_id,)).fetchone()
             if (row and row['state'] == 'running' and row['lease_until'] > now
@@ -229,6 +244,8 @@ class JobStore:
                 db.execute('UPDATE jobs SET state=?,result=?,updated=?,lease_hash=NULL,lease_until=NULL WHERE id=?',
                            (outcome, encrypted, now, job_id))
                 accepted = True
+        if expired:
+            raise ExpiredJobLease('Current unexpired lease required.')
         if not accepted:
             raise Refused('Current unexpired lease required.')
 

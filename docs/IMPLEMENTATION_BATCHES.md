@@ -71,6 +71,6 @@ Primary sources reviewed 27 October 2026; revisit exact versions before each bat
 
 ## Status and continuation
 
-Batch 1: implementation/qualification in progress. Existing reviewed queue commits `1e876ae` and `8300355` are included; operator-cycle additions and merge evidence are recorded in BATCH_01_ACCEPTANCE.md. Batches 2–16: pending, not implemented by this plan.
+Batch 1: source implementation complete; final review/CI/merge status is tracked in [PR #3](https://github.com/octalve-core/octalve-opanel/pull/3). Existing reviewed queue commits `1e876ae` and `8300355` are included; operator-cycle additions and merge evidence are recorded in BATCH_01_ACCEPTANCE.md. Batches 2–16: pending, not implemented by this plan.
 
 Next batch prompt is in [NEXT_BATCH_PROMPT.md](NEXT_BATCH_PROMPT.md). Batch 2 must re-read current main, this register, research and the previous acceptance report before editing; do not repeat Batch 1 or assume a server exists.

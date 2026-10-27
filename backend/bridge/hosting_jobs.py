@@ -3,6 +3,7 @@ import math
 import time
 
 from native_agent.filesystem import Refused
+from native_agent.jobs import InvalidCompletionResult, ExpiredJobLease
 from .hosting_management import run_hosting_operation
 from .management import ServiceScope, _authorized, ManagementRejected
 
@@ -44,12 +45,15 @@ def run_next(store, engine, *, entitlement, audit, now=None):
         outcome = _failure_outcome(engine, job['job_id'])
     try:
         store.finish(job['job_id'], job['lease_token'], outcome=outcome, result=result, now=now)
-    except Refused:
-        # Oversized/invalid results cannot convert an executed job into a
-        # success. An expired lease is already durably unknown in finish().
+    except ExpiredJobLease:
+        # finish committed the lease expiry as unknown.
+        pass
+    except InvalidCompletionResult:
+        # Encoding rejection precedes storage; persist a conservative outcome.
+        # Storage and unsafe-storage failures on either finish must propagate.
         try:
             store.finish(job['job_id'], job['lease_token'], outcome='unknown', now=now)
-        except Refused:
+        except ExpiredJobLease:
             pass
     return store.status(job['job_id'], subject_id=job['subject_id'])
 

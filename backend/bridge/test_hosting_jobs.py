@@ -376,6 +376,84 @@ class HostingWorkerTests(HostingJobRunnerTests):
         with patch.object(self.store, 'finish', side_effect=OSError('disk unavailable')):
             with self.assertRaises(OSError): self.cycle()
 
+    def test_sqlite_completion_failure_stops_cycle_without_duplicate_execution(self):
+        first = self.enqueue()
+        second = self.store.enqueue('files.mkdir', {'path':'next'}, subject_id=41,
+                                    idempotency_key='next', confirmed=True, now=101)
+        dispatch = self.engine._dispatch
+        executions = []
+        def fail_completion(*args):
+            executions.append(True)
+            result = dispatch(*args)
+            with sqlite3.connect(self.store.db) as db:
+                db.execute("""CREATE TRIGGER deny_completion BEFORE UPDATE OF state ON jobs
+                    WHEN OLD.state='running' AND NEW.state!='running'
+                    BEGIN SELECT RAISE(ABORT, 'completion unavailable'); END""")
+            return result
+        self.engine._dispatch = fail_completion
+        from unittest.mock import patch
+        with patch('native_agent.jobs.time.time', return_value=101):
+            with self.assertRaisesRegex(Refused, 'Queue storage unavailable') as error:
+                self.cycle(now=101)
+        self.assertIsInstance(error.exception.__cause__, sqlite3.Error)
+        self.assertTrue((self.root/'hello').exists())
+        self.assertFalse((self.root/'next').exists())
+        with sqlite3.connect(self.store.db) as db:
+            states = dict(db.execute('SELECT id,state FROM jobs'))
+            db.execute('DROP TRIGGER deny_completion')
+        self.assertEqual(states, {first:'running', second:'queued'})
+        self.engine._dispatch = dispatch
+        self.assertEqual(self.cycle(now=102)['counts'], {'succeeded':1})
+        self.assertEqual(len(executions), 1)
+        self.assertEqual(self.cycle(now=1000)['processed'], 0)
+        self.assertEqual(self.store.status(first, subject_id=41)['state'], 'unknown')
+
+    def test_unsafe_completion_storage_is_not_retried(self):
+        from unittest.mock import patch
+        self.enqueue()
+        dispatch = self.engine._dispatch
+        def unsafe_storage(*args):
+            result = dispatch(*args)
+            self.store.db.chmod(0o644)
+            return result
+        self.engine._dispatch = unsafe_storage
+        with patch.object(self.store, 'finish', wraps=self.store.finish) as finish:
+            with self.assertRaisesRegex(Refused, 'Unsafe queue database'):
+                self.cycle()
+            self.assertEqual(finish.call_count, 1)
+        self.assertTrue((self.root/'hello').exists())
+
+    def test_invalid_result_fallback_storage_failure_propagates(self):
+        from unittest.mock import patch
+        from bridge.hosting_management import run_hosting_operation
+        self.enqueue()
+        def invalid_result(*args, **kwargs):
+            run_hosting_operation(*args, **kwargs)
+            with sqlite3.connect(self.store.db) as db:
+                db.execute("""CREATE TRIGGER deny_completion BEFORE UPDATE OF state ON jobs
+                    WHEN OLD.state='running' AND NEW.state!='running'
+                    BEGIN SELECT RAISE(ABORT, 'completion unavailable'); END""")
+            return {'invalid': object()}
+        with patch('native_agent.jobs.time.time', return_value=100), patch(
+                'bridge.hosting_jobs.run_hosting_operation', side_effect=invalid_result):
+            with self.assertRaisesRegex(Refused, 'Queue storage unavailable'):
+                self.cycle()
+
+    def test_invalid_and_oversized_results_become_unknown(self):
+        from unittest.mock import patch
+        from bridge.hosting_management import run_hosting_operation
+        for index, result in enumerate(({'invalid':object()}, {'body':'x'*(6*1024*1024)})):
+            job = self.store.enqueue('files.mkdir', {'path':f'invalid-{index}'}, subject_id=41,
+                                     idempotency_key=f'invalid-{index}', confirmed=True, now=100)
+            def invalid_result(*args, **kwargs):
+                run_hosting_operation(*args, **kwargs)
+                return result
+            with patch('bridge.hosting_jobs.run_hosting_operation', side_effect=invalid_result):
+                self.assertEqual(self.cycle()['counts'], {'unknown':1})
+            self.assertTrue((self.root/f'invalid-{index}').exists())
+            self.assertIsNone(self.store.result(job, subject_id=41))
+        self.assertEqual(self.cycle()['processed'], 0)
+
     def test_inspection_denies_foreign_subject_identity_and_revocation_before_receipt(self):
         from unittest.mock import patch
         from bridge.management import ManagementRejected

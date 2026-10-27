@@ -9,23 +9,25 @@ Programme: [Implementation batches](IMPLEMENTATION_BATCHES.md). Scope is backend
 - `bridge/hosting_jobs.py`: conservative single-job runner, explicitly enabled bounded cycle, and scoped receipt inspection. Inspection omits result bodies and never promotes an unknown job to success.
 - [Operator API and recovery procedure](HOSTING_JOBS.md): exact bounds, activation prerequisites and remaining key/retention duties.
 
-Local implementation history: `1e876ae` queue; `8300355` reviewed lock/lease timing fix; `b20ca00` cycle and inspection. Remote source publication may use a consolidated commit with an identical tree; the PR records that exact head and its CI evidence.
+Local implementation history: `1e876ae` queue; `8300355` reviewed lock/lease timing fix; `b20ca00` cycle and inspection; `54c369b` completion storage-failure propagation. Remote source publication may use a consolidated commit with an identical tree; the PR records that exact head and its CI evidence.
 
 ## Local evidence
 
-After the latest worker additions:
+After the final storage-failure fix:
 
-- `DEBUG=true ../opanel-engines/.venv/bin/python backend/manage.py test bridge.test_hosting_jobs`: 43 tests passed.
-- `DEBUG=true ../opanel-engines/.venv/bin/python backend/manage.py test bridge --verbosity 2`: 177 tests run, 175 passed, two skipped.
-- Full discovery from the backend directory: the same 177 tests, 175 passed, two skipped.
+- `DEBUG=true ../opanel-engines/.venv/bin/python backend/manage.py test bridge.test_hosting_jobs`: 47 tests passed.
+- The earlier bridge run before the storage fix had 177 tests, 175 passed and two skipped; the final full-project result below supersedes it.
+- Full discovery from the backend directory: 181 tests run, 179 passed, two skipped. The final full run used `DEBUG=true ../../opanel-engines/.venv/bin/python manage.py test --verbosity 2` from that directory.
 - The two skips require local `named-checkzone` and `nginx`. GitHub native acceptance installs these validation binaries and requires the tests to execute, not skip.
 - New worker tests first failed for missing APIs. Lease timing regressions demonstrated two failures before the earlier fix; malformed receipt timestamp regression also failed before guarding the input.
+
+Real SQLite trigger failures reproduce completion-write and fallback-write errors; the corrected worker propagates them, stops before claiming the next job and does not repeat the executed mutation.
 
 Evidence includes real temporary filesystem mutation, independent SQLite instances, encrypted storage inspection, entitlement revocation, interrupted/expired outcomes, cancelled/duplicate schedules, bounds and safe receipt metadata. No external server or provider account was used.
 
 ## Source acceptance gate
 
-Before merging, complete task and whole-branch review, address blocking findings, and verify OPanel SSO, Console contract and native acceptance workflows on the exact published source. PR workflow results and merge commit are the authoritative remote evidence. A local green run alone is not merge or release evidence. Frontend source and deployment configuration are unchanged by this batch.
+Before merging, complete task and whole-branch review, address blocking findings, and verify OPanel SSO, Console contract and native acceptance workflows on the exact published source. [PR #3](https://github.com/octalve-core/octalve-opanel/pull/3) workflow results and merge commit are the authoritative remote evidence. A local green run alone is not merge or release evidence. Frontend source and deployment configuration are unchanged by this batch.
 
 ## Explicit limitations
 

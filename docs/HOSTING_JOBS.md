@@ -91,3 +91,12 @@ success or silently requeue an unknown job.
 
 Retention maintenance, key backup/rotation and recovery are operator procedures.
 No automatic retention, pruning or key rotation is implemented or claimed.
+
+Completion failures use typed `InvalidCompletionResult` and `ExpiredJobLease`
+(both remain `Refused` subclasses). Only invalid or oversized result encoding
+falls back to an `unknown` completion; only a matching expired lease whose
+`unknown` transition committed is accepted without another finish. Other lease
+rejections, SQLite/I/O failures, unsafe queue files, and fallback storage failures
+propagate and stop the cycle before another claim. After a native mutation, such
+a failure can leave the job running until expiry; reconcile its receipt and never
+resubmit it automatically.
