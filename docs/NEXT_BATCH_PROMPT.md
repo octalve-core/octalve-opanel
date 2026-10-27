@@ -1,0 +1,11 @@
+# Next execution prompt — Batch 2
+
+Continue Octalve OPanel in `octalve-core/octalve-opanel` with Batch 2 from `docs/IMPLEMENTATION_BATCHES.md`: encrypted component backups and verified recovery foundations.
+
+First inspect current main, open PRs and `docs/BATCH_01_ACCEPTANCE.md`; preserve the reviewed job/receipt interfaces and resolve any incomplete Batch 1 gates before building on them. Re-read `docs/SERVICE_LIFECYCLE_RESEARCH.md` and verify current official PostgreSQL, Dovecot, cryptography and object-storage documentation.
+
+Implement required-component manifests; real bounded file/PostgreSQL/mail exporters; explicit consistency evidence; authenticated encrypted archives with externally held keys; immutable local and S3-compatible store adapters; ciphertext readback verification; and isolated recovery of validated components. Missing/failed required exporters must fail the backup, not produce misleading success. Never copy raw live database files and label them consistent. Do not restore SQL/mail automatically into occupied services. Expose stable job-compatible interfaces; any scheduler registration must preserve fresh Console entitlement and exact operation receipts.
+
+Test actual local encrypt/store/recover roundtrips, wrong key/service/binding, corrupt/truncated manifests, failed exporters, immutable-object conflicts, secret redaction, bounded execution and recovery after interruption. Use disposable PostgreSQL/Dovecot integration where available and distinguish that evidence from mocked CLI or local-storage tests. Document limits and the remaining Batch 13 restore/retention/key-rotation/offsite qualification work.
+
+Keep OPanel independent, retain optional provider adapters, preserve Console's commercial/ownership/provisioning authority, and do not enable or expand the unresolved optional technical-login flow. No hosting purchases, deployments, public provider/storage mutations, payments, provisioning or Production migrations. Review and run required CI on the exact commit; merge only qualified source to OPanel main under existing authorization. Report exact commits, PR, tests and remaining limitations, then provide the Batch 3 prompt. Do not replace implementation with a proposal or restart completed work.
